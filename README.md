@@ -6,11 +6,17 @@ NeoFlow is a standalone tool developed based on Nextflow and Docker and is devel
 
 ## Installation
 
-1. Install [Docker](https://docs.docker.com/install/) engine 1.10.x (or higher).
+1. Download neoflow:
 
-2. Install [Nextflow](https://www.nextflow.io/docs/latest/getstarted.html). Note that Nextflow requires **BASH** and **Java 8** or higher to be installed or run. More information can be found in the Nextflow [get started](https://www.nextflow.io/docs/latest/getstarted.html) page.
+```sh
+git clone https://github.com/bingzhang16/neoflow
+```
 
-3. Install [Python 3.0](https://www.python.org/downloads/) (or higher). The following packages are required:
+2. Install [Docker](https://docs.docker.com/install/) engine 1.10.x (or higher).
+
+3. Install [Nextflow](https://www.nextflow.io/docs/latest/getstarted.html). Note that Nextflow requires **BASH** and **Java 8** or higher to be installed or run. More information can be found in the Nextflow [get started](https://www.nextflow.io/docs/latest/getstarted.html) page.
+
+4. Install [Python 3.0](https://www.python.org/downloads/) (or higher). The following packages are required:
 
 	- os
 	- Bio
@@ -22,13 +28,14 @@ NeoFlow is a standalone tool developed based on Nextflow and Docker and is devel
 	- pandas
 	- multiprocessing
 
-4. Install **ANNOVAR** by following the instructions provide at [http://annovar.openbioinformatics.org/en/latest/](http://annovar.openbioinformatics.org/en/latest/).
+5. Install **ANNOVAR** by following the instructions provide at [http://annovar.openbioinformatics.org/en/latest/](http://annovar.openbioinformatics.org/en/latest/).
 
-5. Install **netMHCpan** by following the instructions provide at [http://www.cbs.dtu.dk/services/doc/netMHCpan-4.0.readme](http://www.cbs.dtu.dk/services/doc/netMHCpan-4.0.readme). 
+6. Install **netMHCpan** by following the instructions provide at [http://www.cbs.dtu.dk/services/doc/netMHCpan-4.0.readme](http://www.cbs.dtu.dk/services/doc/netMHCpan-4.0.readme). 
 
-6. It's recommended to have the directory structure of the working directory as shown below.
+7. It's recommended to have the directory structure of the working directory as shown below.
 
-7. Edit the [*nextflow.config*](https://github.com/bingzhang16/neoflow/blob/master/nextflow.config) as required.
+8. Edit the [*nextflow.config*](https://github.com/bingzhang16/neoflow/blob/master/nextflow.config) as required.
+
 
 ## Usage
 
