@@ -240,10 +240,9 @@ $ nextflow run neoflow.nf --paired_dna_seq false --paired_rna_seq false
 #### Output
 The final neoantigen prediction result is included in file "\*-filtered_neoantigens.tsv".
 
-
 ## Example
 
-Please download a test data using this link: [https://doi.org/10.6084/m9.figshare.7022462.v1](https://doi.org/10.6084/m9.figshare.7022462.v1.)
+Please download a test data using this link: [https://doi.org/10.6084/m9.figshare.7022462.v1](https://doi.org/10.6084/m9.figshare.7022462.v1)
 
 ## Citation
 To cite NeoFlow in publications, please use:
