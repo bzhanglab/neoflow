@@ -70,9 +70,8 @@ The input parameters could be passed as command line parameters, however it's su
 |--msgfplus.maxCharge 		| INT 			| maximum precursor charge to consider if charges are not specified in the spectrum file, default: 3. 																			|
 |--msgfplus.ntt 			| INT 			| number of Tolerable Termini, default: 2. 																																		|
 |--annovar					| FILE			| file path to the ANNOVAR directory. i.e. `path/to/annovar/`. 																													|
-|--netmhcpan 				| FILE 			| file path to the netmhcpan executable. Should be found at `.../netMHCpan-4.0/netMHCpan`.	
-													|	
-|--mhc_affinity_cutoff		| DOUBLE 		| The cutoff of peptide MHC-binding affinity. Default: 150.																														|
+|--netmhcpan 				| FILE 			| file path to the netmhcpan executable. Should be found at `.../netMHCpan-4.0/netMHCpan`.|	
+|--mhc_affinity_cutoff		| DOUBLE 		| The cutoff of peptide MHC-binding affinity. Default: 150.|
 
 ## The directory structure of the working directory.
 
