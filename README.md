@@ -1,8 +1,8 @@
-# Neoflow
+# NeoFlow: a proteogenomics pipeline for neoantigen discovery
 
 ## Description.
 
-***To do...***
+NeoFlow is a standalone tool developed based on Nextflow and Docker and is developed for tumor neoantigens identification using DNA-Seq, RNA-Seq and MS/MS data.
 
 ## Prerequisites. 
 
@@ -69,8 +69,10 @@ The input parameters could be passed as command line parameters, however it's su
 |--msgfplus.minCharge 		| INT 			| minimum precursor charge to consider if charges are not specified in the spectrum file, default: 2. 																			|
 |--msgfplus.maxCharge 		| INT 			| maximum precursor charge to consider if charges are not specified in the spectrum file, default: 3. 																			|
 |--msgfplus.ntt 			| INT 			| number of Tolerable Termini, default: 2. 																																		|
-|--annovar					| FILE			| file path to the ANNOVAR directory. i.e. `path/to/annovar/`. 																														|
-|--netmhcpan 				| FILE 			| file path to the netmhcpan executable. Should be found at `.../netMHCpan-4.0/netMHCpan`.																						|
+|--annovar					| FILE			| file path to the ANNOVAR directory. i.e. `path/to/annovar/`. 																													|
+|--netmhcpan 				| FILE 			| file path to the netmhcpan executable. Should be found at `.../netMHCpan-4.0/netMHCpan`.	
+													|	
+|--mhc_affinity_cutoff		| DOUBLE 		| The cutoff of peptide MHC-binding affinity. Default: 150.																														|
 
 ## The directory structure of the working directory.
 
@@ -186,6 +188,7 @@ params {
 	refseq_human_hg19_gtf  = "data/rsem/refseq_human_hg19_refGene_20170329.gtf"
 	annovar                = "path/to/annovar"
 	netmhcpan              = "path/to/netMHCpan"
+	mhc_affinity_cutoff    = 150
 
 	msgfplus {
 		t           = "20.0ppm"
