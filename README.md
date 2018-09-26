@@ -1,10 +1,10 @@
 # NeoFlow: a proteogenomics pipeline for neoantigen discovery
 
-## Description.
+## Description
 
 NeoFlow is a standalone tool developed based on Nextflow and Docker and is developed for tumor neoantigens identification using DNA-Seq, RNA-Seq and MS/MS data.
 
-## Prerequisites. 
+## Installation
 
 1. Install [Docker](https://docs.docker.com/install/) engine 1.10.x (or higher).
 
@@ -30,7 +30,11 @@ NeoFlow is a standalone tool developed based on Nextflow and Docker and is devel
 
 7. Edit the [*nextflow.config*](https://github.com/bingzhang16/neoflow/blob/master/nextflow.config) as required.
 
-## Inputs.
+## Usage
+
+```sh
+nextflow run neoflow.nf --help
+```
 
 The input parameters could be passed as command line parameters, however it's suggested that users pass these parameters by editing the [*nextflow.config*](https://github.com/bingzhang16/neoflow/blob/master/nextflow.config).
 
@@ -73,7 +77,7 @@ The input parameters could be passed as command line parameters, however it's su
 |--netmhcpan 				| FILE 			| file path to the netmhcpan executable. Should be found at `.../netMHCpan-4.0/netMHCpan`.|	
 |--mhc_affinity_cutoff		| DOUBLE 		| The cutoff of peptide MHC-binding affinity. Default: 150.|
 
-## The directory structure of the working directory.
+#### The directory structure of the working directory.
 
 ```
 ├── neoflow.nf
@@ -159,7 +163,7 @@ The input parameters could be passed as command line parameters, however it's su
 │   │   │   ├── test
 ```
 
-## The Configuration File.
+#### The Configuration File.
 
 The [*nextflow.config*](https://github.com/bingzhang16/neoflow/blob/master/nextflow.config) file should be updated with the following information:
 
@@ -221,9 +225,9 @@ params {
 
 
 
-## Running the pipeline from a Unix/Linux host.
+#### Running the pipeline from a Unix/Linux host.
 
-* Provides support for single-end and paired-end raw reads.
+Provides support for single-end and paired-end raw reads.
 
 ```{bash}
 $ nextflow run neoflow.nf --paired_dna_seq true --paired_rna_seq true
@@ -232,3 +236,18 @@ $ nextflow run neoflow.nf --paired_dna_seq true --paired_rna_seq true
 ```{bash}
 $ nextflow run neoflow.nf --paired_dna_seq false --paired_rna_seq false
 ```
+
+#### Output
+The final neoantigen prediction result is included in file "\*-filtered_neoantigens.tsv".
+
+
+## Example
+
+Please download a test data using this link: [https://doi.org/10.6084/m9.figshare.7022462.v1](https://doi.org/10.6084/m9.figshare.7022462.v1.)
+
+## Citation
+To cite NeoFlow in publications, please use:
+
+## Contribution
+Contributions to the package are more than welcome.
+
