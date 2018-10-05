@@ -12,13 +12,14 @@ if (params.help) {
 	log.info ''
 	log.info 'Usage:'
 	log.info ''
-	log.info '	nextflow run neoflow.nf --rna_seq_read_1 STRING --rna_seq_read_2 STRING --normal_wxs_read_1 STRING --normal_wxs_read_2 STRING --tumor_wxs_read_1 STRING --tumor_wxs_read_2 STRING --paired_dna_seq BOOLEAN --paired_rna_seq BOOLEAN --sampleID STRING  --results STRING --genome_fasta FILE --known_dbsnps_file FILE --cosmic_file FILE --known_indel_file FILE --known_dbsnps_1000_file FILE --mills_indel_file FILE --hla_reference_dna FILE --refseq_human_hg19_gtf FILE'
+	log.info '	nextflow run neoflow.nf --rna_seq_read_1 STRING --rna_seq_read_2 STRING --normal_wxs_read_1 STRING --normal_wxs_read_2 STRING --tumor_wxs_read_1 STRING --tumor_wxs_read_2 STRING --paired_dna_seq BOOLEAN --paired_rna_seq BOOLEAN --sampleID STRING  --results STRING --genome_fasta FILE --known_dbsnps_file FILE --cosmic_file FILE --known_indel_file FILE --known_dbsnps_1000_file FILE --mills_indel_file FILE --hla_reference_dna FILE --refseq_human_hg19_gtf FILE --mhc_affinity_cutoff DOUBLE'
 	log.info ''
 	log.info '	Mandatory arguments:'
 	log.info ''
 	log.info '	--sampleID                STRING     a unique string to identify the sample source or ID.'
 	log.info '	--paired_dna_seq          BOOLEAN    <true> for paired-end DNA-SEQ reads. <false> otherwise.'
 	log.info '	--paired_rna_seq          BOOLEAN    <true> for paired-end RNA-SEQ reads. <false> otherwise.'
+	log.info '  --variant_calling         STRING     mutation caller for WXS "varscan2" or "mutect2" or "strelka2".'
 	log.info '	--genome_fasta            FILE       indexed hg19 Human reference genome.'
 	log.info '	--known_dbsnps_file       FILE       indexed dbSNP file hg19 VCF.'
 	log.info '	--cosmic_file             FILE       indexed VCF file of COSMIC sites.'
@@ -68,7 +69,8 @@ N E O F L O W
 Start      : $workflow.start
 
 BWA        : BWA-0.7.17
-Samtools   : Samtools-1.7
+STAR       : STAR-2.6.0a
+Samtools   : Samtools-1.9
 Picard     : Picard-2.3.0-0
 GATK       : GenomeAnalysisTK-3.8-0
 
@@ -184,7 +186,7 @@ if (params.paired_rna_seq) {
 
 		container "biocontainers/bwa:0.7.15"
 
-		/*afterScript "find $workflow.workDir -name ${reads[0]} -delete; find $workflow.workDir -name ${reads[1]} -delete"*/
+		//afterScript "find $workflow.workDir -name ${reads[0]} -delete; find $workflow.workDir -name ${reads[1]} -delete"
 
 		input:
 		file genome_fasta     
@@ -205,9 +207,10 @@ if (params.paired_rna_seq) {
 		bwa mem -t ${params.threads.mapping} -M ${genome_fasta} ${reads[0]} ${reads[1]} > "${params.sampleID}.dna.${sample}.sam"
 		"""
 	}
-}
 
-else {
+
+} else {
+
 
 	/* Runs for paired-end reads when paired_dna_seq == false */
 
@@ -217,7 +220,7 @@ else {
 
 		container "biocontainers/bwa:0.7.15"
 
-		/*afterScript "find $workflow.workDir -name ${reads} -delete"*/
+		//afterScript "find $workflow.workDir -name ${reads} -delete"
 
 		input:
 		file genome_fasta     
@@ -247,9 +250,9 @@ process samtools_view {
 
 	tag "$sample"
 
-	container "biocontainers/samtools:1.3.1"
+	container "zhanglab18/samtools:1.9"
 
-	/* afterScript "find $workflow.workDir -name ${sam_file_raw} -delete" */
+	//afterScript "find $workflow.workDir -name ${sam_file_raw} -delete"
 
 	input:
 	set sample, file(sam_file_raw) from bwa_aligned_sam_wxs_ch
@@ -272,7 +275,7 @@ process picard_add_or_replace_read_groups {
 
 	container "biocontainers/picard:2.3.0"
 
-	/*afterScript "find $workflow.workDir -name ${bam_file_raw} -delete"*/
+	//afterScript "find $workflow.workDir -name ${bam_file_raw} -delete"
 	
 	input:
 	set sample, file(bam_file_raw) from bwa_aligned_bam_wxs_ch
@@ -301,11 +304,9 @@ process samtools_flagstat {
 	
 	tag "$sample"
 
-	container "biocontainers/samtools:1.3.1"
+	container "zhanglab18/samtools:1.9"
 
-	beforeScript "mkdir -p ${params.results}/${params.sampleID}"
-
-	publishDir "${params.results}/${params.sampleID}", mode: "move", overwrite: true
+	publishDir "${params.results}/${params.sampleID}/${params.variant_calling}", mode: "copy", overwrite: true
 	
 	input:
 	set sample, file(bam_file_added_group) from picard_added_group_bam_wxs_ch1
@@ -328,7 +329,7 @@ process picard_mark_duplicates {
 
 	container "biocontainers/picard:2.3.0"
 
-	/*afterScript "find $workflow.workDir -name ${bam_file_added_group} -delete"*/
+	//afterScript "find $workflow.workDir -name ${bam_file_added_group} -delete"
 	
 	input:
 	set sample, file(bam_file_added_group) from picard_added_group_bam_wxs_ch2
@@ -392,7 +393,7 @@ process gatk_indel_realignment {
 
 	container "broadinstitute/gatk3:3.8-0"
 
-	/*afterScript "find $workflow.workDir -name ${interval_list} -delete; find $workflow.workDir -name ${bam_file_marked_duplicate} -delete; find $workflow.workDir -name ${bai_file_marked_duplicate} -delete" */
+	//afterScript "find $workflow.workDir -name ${interval_list} -delete; find $workflow.workDir -name ${bam_file_marked_duplicate} -delete; find $workflow.workDir -name ${bai_file_marked_duplicate} -delete"
 	
 	input:
 	file genome_fasta
@@ -469,7 +470,7 @@ process gatk_print_reads {
 
 	container "broadinstitute/gatk3:3.8-0"
 
-	/*afterScript "find $workflow.workDir -name ${indel_realigned_bam} -delete; find $workflow.workDir -name ${indel_realigned_bai} -delete; find $workflow.workDir -name ${recalibration_table} -delete" */
+	//afterScript "find $workflow.workDir -name ${indel_realigned_bam} -delete; find $workflow.workDir -name ${indel_realigned_bai} -delete; find $workflow.workDir -name ${recalibration_table} -delete"
 		
 	input:
 	file genome_fasta
@@ -498,105 +499,304 @@ process gatk_print_reads {
 }
 
 
-Channel
-		.from("chr1","chr2","chr3","chr4","chr5","chr6","chr7","chr8","chr9","chr10","chr11","chr12","chr13","chr14","chr15","chr16","chr17","chr18","chr19","chr20","chr21","chr22","chrM","chrX","chrY")
-		.set{chromosome_wxs_ch}
+if (params.variant_calling == "varscan2") {
 
 
-/* Call somatic SNPs and indels via local re-assembly of haplotypes */
-	
-process mutect_2 {
-	
-	tag "$chromosome"
+	/* Generate a normal and a tumor SAMtools pileup format files. */
 
-	container "broadinstitute/gatk3:3.8-0"
-	
-	input:
-	file genome_fasta
-	file genome_fasta_fai
-	file genome_fasta_dict
-	
-	file cosmic_file
-	file known_dbsnps_file
-	
-	file("*") from processed_bam_wxs_ch.toList()
-	file("*") from processed_bai_wxs_ch.toList()
-	
-	val chromosome from chromosome_wxs_ch
-	
-	output:
-	file("${params.sampleID}.${chromosome}.vcf") into mutect2_vcf_wxs_ch
+	process samtools_mpileup {
+
+		tag "wxs"
+
+		container "zhanglab18/samtools:1.9"
+
+		input:
+		file genome_fasta
+		file genome_fasta_fai
+
+		file("*") from processed_bam_wxs_ch.toList()
+		file("*") from processed_bai_wxs_ch.toList()
+
+		output:
+		file("${params.sampleID}.dna.normal.tumor.mpileup") into samtools_pileup_wxs_ch
+
+		script:
+		"""
+		samtools mpileup \
+		-f ${genome_fasta} \
+		-d 8000 \
+			${params.sampleID}.dna.normal.aligned.grouped.sorted.deduplicated.realigned.processed.bam \
+			${params.sampleID}.dna.tumor.aligned.grouped.sorted.deduplicated.realigned.processed.bam \
+			> ${params.sampleID}.dna.normal.tumor.mpileup
+		"""
+	}
+
+
+	/* Perform somatic mutation calling using VarScan2 */
+
+	process varscan2_somatic {
+
+		tag "wxs"
+
+		container "zhanglab18/varscan:2.4.2"
+
+		//afterScript "find $workflow.workDir -name ${params.sampleID}.normal.mpileup -delete; find $workflow.workDir -name ${params.sampleID}.tumor.mpileup -delete"
+
+		input:
+		file(normal_tumor_mpileup) from samtools_pileup_wxs_ch
+
+		output:
+		set file("${params.sampleID}.varscan.somatic.snp.vcf"), file("${params.sampleID}.varscan.somatic.indel.vcf") into varscan2_vcf_wxs_ch
+
+		script:
+		"""
+		java -Xmx8g -jar /opt/VarScan.v2.4.2.jar somatic \
+			${normal_tumor_mpileup} \
+			${params.sampleID}.varscan.somatic \
+			--output-vcf 1 \
+			--mpileup 1
+		"""
+	}
+
+
+	process varscan_process_somatic {
+
+		tag "wxs"
+
+		container "zhanglab18/varscan:2.4.2"
+
+		//afterScript "find $workflow.workDir -name ${varscan_snp_vcf} -delete; find $workflow.workDir -name ${varscan_indel_vcf} -delete"
+
+		input:
+		set file(varscan_snp_vcf), file(varscan_indel_vcf) from varscan2_vcf_wxs_ch
+
+		output:
+		set file("${varscan_snp_vcf.baseName}.Somatic.vcf"), file("${varscan_indel_vcf.baseName}.Somatic.vcf") into processed_somatic_ch
+
+		script:
+		"""
+		java -Xmx8g -jar /opt/VarScan.v2.4.2.jar processSomatic ${varscan_snp_vcf}
+		java -Xmx8g -jar /opt/VarScan.v2.4.2.jar processSomatic ${varscan_indel_vcf}
+		"""
+	}
+
+
+	/*
+	 * Concatenate VCF files (for example split by chromosome). Note that the input and output VCFs will have the same number of columns.
+	 */
+
+	process vcf_concatenate {
+
+		tag "wxs"
+
+		container "zhanglab18/vcftools:0.1.16"
+
+		//afterScript "find $workflow.workDir -name ${varscan_snp_somatic} -delete; find $workflow.workDir -name ${varscan_indel_somatic} -delete"
+
+		input:
+		set file(varscan_snp_somatic), file(varscan_indel_somatic) from processed_somatic_ch
+
+		output:
+		file("${params.sampleID}.varscan.somatic.concat.vcf") into variant_calling_vcf_wxs_ch
+
+		script:
+		"""
+		vcf-concat ${varscan_snp_somatic} ${varscan_indel_somatic} > ${params.sampleID}.varscan.somatic.concat.vcf
+		"""
+	}
+
+
+} else if (params.variant_calling == "strelka2"){
+
+
+	process strelka2 {
+
+		tag "wxs"
+
+		container "zhanglab18/strelka:2.9.7"
+
+	 	input:
+	 	file genome_fasta
+	 	file genome_fasta_fai
+
+	 	file known_indel_file
+	 	file mills_indel_file
+
+	 	file("*") from processed_bam_wxs_ch.toList()
+		file("*") from processed_bai_wxs_ch.toList()
+
+	 	output:
+	 	set file("somatic.snvs.vcf.gz"), file("somatic.indels.vcf.gz") into strelka2_vcf_wxs_ch
+
+	 	script:
+		"""
+		/opt/strelka-2.9.2/bin/configureStrelkaSomaticWorkflow.py \
+			--tumorBam  ${params.sampleID}.dna.tumor.aligned.grouped.sorted.deduplicated.realigned.processed.bam \
+			--normalBam ${params.sampleID}.dna.normal.aligned.grouped.sorted.deduplicated.realigned.processed.bam \
+			--ref ${genome_fasta} \
+			--runDir /opt/somatic
+
+		/opt/somatic/runWorkflow.py -m local -j 5
+
+		mv /opt/somatic/results/variants/* .
+		"""
+	}
+
+
+	/*
+	 * Concatenate VCF files (for example split by chromosome). Note that the input and output VCFs will have the same number of columns.
+	 */
+
+	process vcf_concatenate {
+
+		tag "wxs"
+
+		container "zhanglab18/vcftools:0.1.16"
+
+		//afterScript "find $workflow.workDir -name ${somatic_snvs} -delete; find $workflow.workDir -name ${somatic_indels} -delete"
+
+		input:
+		set file(somatic_snvs), file(somatic_indels) from strelka2_vcf_wxs_ch
+
+		output:
+		file("${params.sampleID}.strelka.concat.vcf") into concatenated_vcf_wxs_ch
+
+		script:
+		"""
+		vcf-concat ${somatic_snvs} ${somatic_indels} > ${params.sampleID}.strelka.concat.vcf
+		"""
+	}
+
+
+	/* 
+	 * Fix a VCF if INFO or FILTER are missing.
+	 */
+
+	process fix_vcf {
+
+		tag "wxs"
+
+		container "zhanglab18/jvarkit:latest"
+
+		//afterScript "find $workflow.workDir -name ${concatenated_vcf} -delete"
+
+		input:
+		file(concatenated_vcf) from concatenated_vcf_wxs_ch
+
+		output:
+		file("${concatenated_vcf.baseName}.fixed.vcf") into variant_calling_vcf_wxs_ch
+
+		script:
+		"""
+		java -jar /jvarkit/dist/fixvcf.jar < ${concatenated_vcf} > ${concatenated_vcf.baseName}.out.vcf
+
+		cat ${concatenated_vcf.baseName}.out.vcf | awk '{if(/^##/) print; else if(/^#/) print "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n"\$0; else print \$1"\t"\$2"\t"\$3"\t"\$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8"\tGT:"\$9"\t./.:"\$10"\t./.:"\$11;}' - > ${concatenated_vcf.baseName}.fixed.vcf
+		"""
+	}
+
+
+} else if (params.variant_calling == "mutect2"){
+
+
+	Channel
+			.from("chr1","chr2","chr3","chr4","chr5","chr6","chr7","chr8","chr9","chr10","chr11","chr12","chr13","chr14","chr15","chr16","chr17","chr18","chr19","chr20","chr21","chr22","chrM","chrX","chrY")
+			.set{chromosome_wxs_ch}
+
+
+	/* Call somatic SNPs and indels via local re-assembly of haplotypes */
 		
-	script:
-	"""	
-	java -Xmx6g -jar /usr/GenomeAnalysisTK.jar \
-		-T MuTect2 \
-		-R ${genome_fasta} \
-		-I:tumor  ${params.sampleID}.dna.tumor.aligned.grouped.sorted.deduplicated.realigned.processed.bam \
-		-I:normal ${params.sampleID}.dna.normal.aligned.grouped.sorted.deduplicated.realigned.processed.bam \
-		-L ${chromosome} \
-		--dbsnp ${known_dbsnps_file} \
-		--cosmic ${cosmic_file} \
-		-o "${params.sampleID}.${chromosome}.vcf" \
-		-nt ${params.threads.mutect2}	
-	"""	
+	process mutect_2 {
+		
+		tag "$chromosome"
+
+		container "broadinstitute/gatk3:3.8-0"
+		
+		input:
+		file genome_fasta
+		file genome_fasta_fai
+		file genome_fasta_dict
+		
+		file cosmic_file
+		file known_dbsnps_file
+		
+		file("*") from processed_bam_wxs_ch.toList()
+		file("*") from processed_bai_wxs_ch.toList()
+		
+		val chromosome from chromosome_wxs_ch
+		
+		output:
+		file("${params.sampleID}.${chromosome}.vcf") into mutect2_vcf_wxs_ch
+			
+		script:
+		"""	
+		java -Xmx6g -jar /usr/GenomeAnalysisTK.jar \
+			-T MuTect2 \
+			-R ${genome_fasta} \
+			-I:tumor  ${params.sampleID}.dna.tumor.aligned.grouped.sorted.deduplicated.realigned.processed.bam \
+			-I:normal ${params.sampleID}.dna.normal.aligned.grouped.sorted.deduplicated.realigned.processed.bam \
+			-L ${chromosome} \
+			--dbsnp ${known_dbsnps_file} \
+			--cosmic ${cosmic_file} \
+			-o "${params.sampleID}.${chromosome}.vcf" \
+			-nt ${params.threads.mutect2}	
+		"""	
+	}
+
+
+	/* Concatenate VCF files of non-overlapping genome intervals, all with the same set of samples */
+
+	process gatk_cat_variants {
+
+		tag "wxs"
+
+		container "broadinstitute/gatk3:3.8-0"
+
+		//afterScript "find $workflow.workDir -name '${params.sampleID}.chr*.vcf' -delete"
+		
+		input:
+		file genome_fasta
+		file genome_fasta_fai
+		file genome_fasta_dict
+
+		file("*") from mutect2_vcf_wxs_ch.toList()
+		
+		output:
+		file("${params.sampleID}.mutect2.vcf") into variant_calling_vcf_wxs_ch
+		
+		script:
+		"""	
+		java -Xmx6g -cp /usr/GenomeAnalysisTK.jar org.broadinstitute.gatk.tools.CatVariants \
+			-R ${genome_fasta} \
+			-V ${params.sampleID}.chr1.vcf  \
+			-V ${params.sampleID}.chr2.vcf  \
+			-V ${params.sampleID}.chr3.vcf  \
+			-V ${params.sampleID}.chr4.vcf  \
+			-V ${params.sampleID}.chr5.vcf  \
+			-V ${params.sampleID}.chr6.vcf  \
+			-V ${params.sampleID}.chr7.vcf  \
+			-V ${params.sampleID}.chr8.vcf  \
+			-V ${params.sampleID}.chr9.vcf  \
+			-V ${params.sampleID}.chr10.vcf \
+			-V ${params.sampleID}.chr11.vcf \
+			-V ${params.sampleID}.chr12.vcf \
+			-V ${params.sampleID}.chr13.vcf \
+			-V ${params.sampleID}.chr14.vcf \
+			-V ${params.sampleID}.chr15.vcf \
+			-V ${params.sampleID}.chr16.vcf \
+			-V ${params.sampleID}.chr17.vcf \
+			-V ${params.sampleID}.chr18.vcf \
+			-V ${params.sampleID}.chr19.vcf \
+			-V ${params.sampleID}.chr20.vcf \
+			-V ${params.sampleID}.chr21.vcf \
+			-V ${params.sampleID}.chr22.vcf \
+			-V ${params.sampleID}.chrX.vcf  \
+			-V ${params.sampleID}.chrY.vcf  \
+			-V ${params.sampleID}.chrM.vcf  \
+			-out "${params.sampleID}.mutect2.vcf" \
+			-assumeSorted
+		"""
+	}
 }
-
-
-/* Concatenate VCF files of non-overlapping genome intervals, all with the same set of samples */
-
-process gatk_cat_variants {
-
-	tag "wxs"
-
-	container "broadinstitute/gatk3:3.8-0"
-
-	/*afterScript "find $workflow.workDir -name '${params.sampleID}.chr*.vcf' -delete"*/
-	
-	input:
-	file genome_fasta
-	file genome_fasta_fai
-	file genome_fasta_dict
-
-	file("*") from mutect2_vcf_wxs_ch.toList()
-	
-	output:
-	file("${params.sampleID}.mutect2.vcf") into mutect2_final_vcf_wxs_ch
-	
-	script:
-	"""	
-	java -Xmx6g -cp /usr/GenomeAnalysisTK.jar org.broadinstitute.gatk.tools.CatVariants \
-		-R ${genome_fasta} \
-		-V ${params.sampleID}.chr1.vcf  \
-		-V ${params.sampleID}.chr2.vcf  \
-		-V ${params.sampleID}.chr3.vcf  \
-		-V ${params.sampleID}.chr4.vcf  \
-		-V ${params.sampleID}.chr5.vcf  \
-		-V ${params.sampleID}.chr6.vcf  \
-		-V ${params.sampleID}.chr7.vcf  \
-		-V ${params.sampleID}.chr8.vcf  \
-		-V ${params.sampleID}.chr9.vcf  \
-		-V ${params.sampleID}.chr10.vcf \
-		-V ${params.sampleID}.chr11.vcf \
-		-V ${params.sampleID}.chr12.vcf \
-		-V ${params.sampleID}.chr13.vcf \
-		-V ${params.sampleID}.chr14.vcf \
-		-V ${params.sampleID}.chr15.vcf \
-		-V ${params.sampleID}.chr16.vcf \
-		-V ${params.sampleID}.chr17.vcf \
-		-V ${params.sampleID}.chr18.vcf \
-		-V ${params.sampleID}.chr19.vcf \
-		-V ${params.sampleID}.chr20.vcf \
-		-V ${params.sampleID}.chr21.vcf \
-		-V ${params.sampleID}.chr22.vcf \
-		-V ${params.sampleID}.chrX.vcf  \
-		-V ${params.sampleID}.chrY.vcf  \
-		-V ${params.sampleID}.chrM.vcf  \
-		-out "${params.sampleID}.mutect2.vcf" \
-		-assumeSorted
-	"""
-}
-
 
 /* Sort VCF files according to the order of the contigs in the header/sequence dictionary and then by coordinate. */
 
@@ -606,16 +806,16 @@ process picard_sort_vcf {
 
 	container "biocontainers/picard:2.3.0"
 
-	/*afterScript "find $workflow.workDir -name ${original_vcf} -delete"*/
+	//afterScript "find $workflow.workDir -name ${original_vcf} -delete"
 
-	publishDir "${params.results}/${params.sampleID}", mode: "copy", overwrite: true
+	publishDir "${params.results}/${params.sampleID}/${params.variant_calling}", mode: "copy", overwrite: true
 
 	input:
 	file genome_fasta
 	file genome_fasta_fai
 	file genome_fasta_dict
 	
-	file(original_vcf) from mutect2_final_vcf_wxs_ch
+	file(original_vcf) from variant_calling_vcf_wxs_ch
 	
 	output:
 	file("${original_vcf.baseName}.sorted.vcf") into picard_sort_vcf_wxs_ch
@@ -638,7 +838,7 @@ process gatk_variant_filtration {
 
 	container "broadinstitute/gatk3:3.8-0"
 
-	/*afterScript "find $workflow.workDir -name ${sorted_vcf} -delete"*/
+	//afterScript "find $workflow.workDir -name ${sorted_vcf} -delete"
 
 	input:
 	file genome_fasta
@@ -675,17 +875,15 @@ process vcftools_remove_filtered {
 
 	container "zhanglab18/vcftools:0.1.16"
 
-	beforeScript "mkdir -p ${params.results}/${params.sampleID}"
+	//afterScript "find $workflow.workDir -name ${sorted_vcf} -delete"
 
-	/*afterScript "find $workflow.workDir -name ${sorted_vcf} -delete"*/
-
-	publishDir "${params.results}/${params.sampleID}", mode: "copy", overwrite: true
+	publishDir "${params.results}/${params.sampleID}/${params.variant_calling}", mode: "copy", overwrite: true
 
 	input:
 	file(sorted_vcf) from gatk_variant_filtration_vcf_wxs_ch
 
 	output:
-	file("${sorted_vcf.baseName}.recode.vcf") into vcftools_filtered_vcf_wxs_ch
+	file("${sorted_vcf.baseName}.recode.vcf") into filtered_vcf_wxs_ch
 
 	script:
 	"""
@@ -704,10 +902,10 @@ process annovar {
 
 	tag "wxs"
 
-	/*afterScript "find $workflow.workDir -name ${mutect2_vcf} -delete"*/
+	//afterScript "find $workflow.workDir -name ${mutect2_vcf} -delete"
 
 	input:
-	file(mutect2_vcf) from vcftools_filtered_vcf_wxs_ch
+	file(mutect2_vcf) from filtered_vcf_wxs_ch
 
 	output:
 	file("${params.sampleID}.wxs.hg19_multianno.txt") into annovar_wxs_ch
@@ -838,9 +1036,9 @@ process protein_db_construction {
 
 	container "zhanglab18/customprodbj:1.1.0"
 
-	/*afterScript "find $workflow.workDir -name ${hg19_multianno_msi} -delete; find $workflow.workDir -name ${hg19_multianno_wxs} -delete"*/
+	//afterScript "find $workflow.workDir -name ${hg19_multianno_msi} -delete; find $workflow.workDir -name ${hg19_multianno_wxs} -delete"
 
-	publishDir "${params.results}/${params.sampleID}", mode: "copy", overwrite: true
+	publishDir "${params.results}/${params.sampleID}/${params.variant_calling}", mode: "copy", overwrite: true
 
 	input:
 	file mrna_database_fa
@@ -852,9 +1050,9 @@ process protein_db_construction {
 	output:
 	file("${params.sampleID}.msgfplus.txt") into protein_db_construction_wxs_chx
 
+	file("${params.sampleID}.pro-ref.fasta") into protein_db_reference_wxs_ch
 	file("${params.sampleID}.merge-var.fasta") into protein_db_construction_wxs_ch1
 	file("${params.sampleID}.merge-var.fasta") into protein_db_construction_wxs_ch2
-	file("${params.sampleID}.pro-ref.fasta") into protein_db_reference
 	
 	set file("${params.sampleID}.merge-var.fasta"), file("${params.sampleID}.merge-varInfo.txt") into protein_db_construction_wxs_ch3
 
@@ -866,8 +1064,8 @@ process protein_db_construction {
 		-i ${params.sampleID}.msgfplus.txt \
 		-d ${mrna_database_fa} \
 		-r ${gene_annotation_txt} \
-		-o . \
 		-ref ${params.sampleID}.pro-ref.fasta \
+		-o . \
 		-t
 
 	mv merge-var.fasta ${params.sampleID}.merge-var.fasta
@@ -884,13 +1082,14 @@ process protein_db_construction {
 Channel.fromPath("${params.mzml_files_dir}/*.mzML")
 	.into{mzml_files_ch1; mzml_files_ch2}
 
+
 process msgfplus {
 
 	tag "proteomics"
 
 	container "zhanglab18/msgfplus:2018.07.17"
 
-	publishDir "${params.results}/${params.sampleID}", mode: "copy", overwrite: true
+	publishDir "${params.results}/${params.sampleID}/${params.variant_calling}", mode: "copy", overwrite: true
 
 	input:
 	file modification_file_txt
@@ -951,7 +1150,7 @@ process deepflq {
 
 	container "zhanglab18/deeplfq:1.0.0"
 
-	publishDir "${params.results}/${params.sampleID}", mode: "copy", overwrite: true
+	publishDir "${params.results}/${params.sampleID}/${params.variant_calling}", mode: "copy", overwrite: true
 
 	input:
 	file("*") from mzml_files_ch2.collect()
@@ -1017,9 +1216,9 @@ process samtools_view {
 
 	tag "wxs"
 
-	container "biocontainers/samtools:1.3.1"
+	container "zhanglab18/samtools:1.9"
 
-	/*afterScript "find $workflow.workDir -name ${sam_file_raw_1} -delete; find $workflow.workDir -name ${sam_file_raw_2} -delete"*/
+	//afterScript "find $workflow.workDir -name ${sam_file_raw_1} -delete; find $workflow.workDir -name ${sam_file_raw_2} -delete"
 
 	input:
 	set file(sam_file_raw_1), file(sam_file_raw_2) from bwa_index_and_mem_sam_wxs_ch
@@ -1039,9 +1238,9 @@ process samtools_fastq  {
 
 	tag "wxs"
 
-	container "biocontainers/samtools:1.3.1"
+	container "zhanglab18/samtools:1.9"
 
-	/*afterScript "find $workflow.workDir -name ${bam_1} -delete; find $workflow.workDir -name ${bam_2} -delete"*/
+	//afterScript "find $workflow.workDir -name ${bam_1} -delete; find $workflow.workDir -name ${bam_2} -delete"
 
 	input:
 	set file(bam_1), file(bam_2) from optitype_bam_wxs_ch
@@ -1065,11 +1264,9 @@ process optitype {
 
 	container "zhanglab18/optitype:1.3.1"
 
-	beforeScript "mkdir -p ${params.results}/${params.sampleID}"
+	//afterScript "find $workflow.workDir -name ${filtered_fastq_1} -delete; find $workflow.workDir -name ${filtered_fastq_2} -delete"
 
-	/*afterScript "find $workflow.workDir -name ${filtered_fastq_1} -delete; find $workflow.workDir -name ${filtered_fastq_2} -delete"*/
-
-	publishDir "${params.results}/${params.sampleID}", mode: "copy", overwrite: true
+	publishDir "${params.results}/${params.sampleID}/${params.variant_calling}", mode: "copy", overwrite: true
 
 	input:
 	set file(filtered_fastq_1), file(filtered_fastq_2) from samtools_filtered_wxs_ch
@@ -1094,7 +1291,7 @@ process peptide_binding_prediction {
 
 	tag "wxs"
 
-	// afterScript "find $workflow.workDir -name ${optitype_result_tsv} -delete; find $workflow.workDir -name ${optitype_coverage_plot} -delete"
+	//afterScript "find $workflow.workDir -name ${optitype_result_tsv} -delete; find $workflow.workDir -name ${optitype_coverage_plot} -delete"
 
 	input:
 	set file(database_file_fasta), file(var_info_txt) from protein_db_construction_wxs_ch3
@@ -1128,7 +1325,7 @@ process peptide_binding_prediction {
 
 		tag "$sample"
 
-		container "quay.io/biocontainers/star:2.6.0b--0"
+		container "zhanglab18/star:2.6.0a"
 
 		input:
 		file genome_fasta
@@ -1155,7 +1352,9 @@ process peptide_binding_prediction {
 	}
 }
 
+
 else {
+
 
 	/* Runs for single-end reads when paired_rna_seq == false */
 
@@ -1163,7 +1362,7 @@ else {
 
 		tag "$sample"
 
-		container "quay.io/biocontainers/star:2.6.0b--0"
+		container "zhanglab18/star:2.6.0a"
 
 		input:
 		file genome_fasta
@@ -1172,7 +1371,6 @@ else {
 
 		output:
 		file("${params.sampleID}.SJ.out.tab") into star_first_pass_rna_seq_ch
-
 
 		script:
 		"""
@@ -1199,15 +1397,16 @@ else {
 
 if(params.paired_rna_seq) {
 
+
 	/* Runs for paired-end reads when paired_rna_seq == true */
 
 	 process star_second_pass {
 
 		tag "$sample"
 
-		container "quay.io/biocontainers/star:2.6.0b--0"
+		container "zhanglab18/star:2.6.0a"
 
-		/*afterScript "find $workflow.workDir -name ${reads[0]} -delete; find $workflow.workDir -name ${reads[1]} -delete; find $workflow.workDir -name ${params.sampleID}.SJ.out.tab -delete"*/
+		//afterScript "find $workflow.workDir -name ${reads[0]} -delete; find $workflow.workDir -name ${reads[1]} -delete; find $workflow.workDir -name ${params.sampleID}.SJ.out.tab -delete"
 
 		input:
 		file genome_fasta
@@ -1216,8 +1415,8 @@ if(params.paired_rna_seq) {
 		set sample, file(reads) from grouped_raw_reads_rna_seq_ch2
 
 		output:
+		val "true" into star_mapping_done_ch
 		file("${params.sampleID}.rna.aligned.bam") into star_second_pass_rna_seq_ch
-		val 'STAR mapping for variant calling is done' into star_mapping_variant_call
 
 		script:
 		"""
@@ -1238,9 +1437,10 @@ if(params.paired_rna_seq) {
 		mv ${params.sampleID}.rna.Aligned.out.bam ${params.sampleID}.rna.aligned.bam
 		"""
 	}
-}
 
-else {
+
+} else {
+
 
 	/* Runs for paired-end reads when paired_rna_seq == false */
 
@@ -1248,9 +1448,9 @@ else {
 
 		tag "$sample"
 
-		container "quay.io/biocontainers/star:2.6.0b--0"
+		container "zhanglab18/star:2.6.0a"
 
-		/*afterScript "find $workflow.workDir -name ${reads} -delete; find $workflow.workDir -name ${params.sampleID}.SJ.out.tab -delete"*/
+		//afterScript "find $workflow.workDir -name ${reads} -delete; find $workflow.workDir -name ${params.sampleID}.SJ.out.tab -delete"
 
 		input:
 		file genome_fasta
@@ -1259,8 +1459,8 @@ else {
 		set sample, file(reads) from grouped_raw_reads_rna_seq_ch2
 
 		output:
+		val "true" into star_mapping_done_ch
 		file("${params.sampleID}.rna.aligned.bam") into star_second_pass_rna_seq_ch
-		val 'STAR mapping for variant calling is done' into star_mapping_variant_call
 
 		script:
 		"""
@@ -1292,7 +1492,7 @@ process picard_add_or_replace_read_groups {
 
 	container "biocontainers/picard:2.3.0"
 
-	/*afterScript "find $workflow.workDir -name ${bam_file_raw} -delete"*/
+	//afterScript "find $workflow.workDir -name ${bam_file_raw} -delete"
 	
 	input:
 	file(bam_file_raw) from star_second_pass_rna_seq_ch
@@ -1347,13 +1547,11 @@ process samtools_flagstat {
 	
 	tag "rna-seq"
 
-	container "biocontainers/samtools:1.3.1"
+	container "zhanglab18/samtools:1.9"
 
-	beforeScript "mkdir -p ${params.results}/${params.sampleID}"
+	//afterScript "find $workflow.workDir -name ${bam_file_added_group} -delete"
 
-	/*afterScript "find $workflow.workDir -name ${bam_file_added_group} -delete"*/
-
-	publishDir "${params.results}/${params.sampleID}", mode: "move", overwrite: true
+	publishDir "${params.results}/${params.sampleID}/${params.variant_calling}", mode: "copy", overwrite: true
 	
 	input:
 	file(bam_file_added_group) from picard_mark_duplicates_rna_seq_ch1
@@ -1379,7 +1577,7 @@ process gatk_split_n_cigar_reads {
 
 	container "broadinstitute/gatk3:3.8-0"
 
-	/*afterScript "find $workflow.workDir -name ${bam_file_marked_duplicate} -delete; find $workflow.workDir -name ${bai_file_marked_duplicate} -delete"*/
+	//afterScript "find $workflow.workDir -name ${bam_file_marked_duplicate} -delete; find $workflow.workDir -name ${bai_file_marked_duplicate} -delete"
 		
 	input:
 	file genome_fasta
@@ -1450,7 +1648,7 @@ process gatk_indel_realignment {
 
 	container "broadinstitute/gatk3:3.8-0"
 
-	/*afterScript "find $workflow.workDir -name ${interval_list} -delete; find $workflow.workDir -name ${bam_file_marked_duplicate_splitted} -delete; find $workflow.workDir -name ${bai_file_marked_duplicate_splitted} -delete"*/
+	//afterScript "find $workflow.workDir -name ${interval_list} -delete; find $workflow.workDir -name ${bam_file_marked_duplicate_splitted} -delete; find $workflow.workDir -name ${bai_file_marked_duplicate_splitted} -delete"
 	
 	input:
 	file genome_fasta
@@ -1527,7 +1725,7 @@ process gatk_print_reads {
 
 	container "broadinstitute/gatk3:3.8-0"
 
-	/*afterScript "find $workflow.workDir -name ${indel_realigned_bam} -delete; find $workflow.workDir -name ${indel_realigned_bai} -delete; find $workflow.workDir -name ${recalibration_table} -delete"*/
+	//afterScript "find $workflow.workDir -name ${indel_realigned_bam} -delete; find $workflow.workDir -name ${indel_realigned_bai} -delete; find $workflow.workDir -name ${recalibration_table} -delete"
 		
 	input:
 	file genome_fasta
@@ -1560,7 +1758,7 @@ process haplotype_caller {
 
 	container "broadinstitute/gatk3:3.8-0"
 
-	/*afterScript "find $workflow.workDir -name ${processed_bam} -delete; find $workflow.workDir -name ${processed_bai} -delete"*/
+	//afterScript "find $workflow.workDir -name ${processed_bam} -delete; find $workflow.workDir -name ${processed_bai} -delete"
 	
 	input:
 	file genome_fasta
@@ -1596,9 +1794,9 @@ process picard_sort_vcf {
 
 	container "biocontainers/picard:2.3.0"
 
-	/*afterScript "find $workflow.workDir -name ${original_vcf} -delete"*/
+	//afterScript "find $workflow.workDir -name ${original_vcf} -delete"
 
-	publishDir "${params.results}/${params.sampleID}", mode: "copy", overwrite: true
+	publishDir "${params.results}/${params.sampleID}/${params.variant_calling}", mode: "copy", overwrite: true
 
 	input:
 	file genome_fasta
@@ -1628,7 +1826,7 @@ process gatk_variant_filtration {
 
 	container "broadinstitute/gatk3:3.8-0"
 
-	/*afterScript "find $workflow.workDir -name ${sorted_vcf} -delete"*/
+	//afterScript "find $workflow.workDir -name ${sorted_vcf} -delete"
 
 	input:
 	file genome_fasta
@@ -1665,11 +1863,9 @@ process vcftools_remove_filtered {
 
 	container "zhanglab18/vcftools:0.1.16"
 
-	beforeScript "mkdir -p ${params.results}/${params.sampleID}"
+	//afterScript "find $workflow.workDir -name ${sorted_vcf} -delete"
 
-	/*afterScript "find $workflow.workDir -name ${sorted_vcf} -delete"*/
-
-	publishDir "${params.results}/${params.sampleID}", mode: "copy", overwrite: true
+	publishDir "${params.results}/${params.sampleID}/${params.variant_calling}", mode: "copy", overwrite: true
 
 	input:
 	file(sorted_vcf) from gatk_variant_filtration_vcf_rna_seq_ch
@@ -1694,7 +1890,7 @@ process annovar {
 
 	tag "rna-seq"
 
-	/*afterScript "find $workflow.workDir -name ${haplotype_caller_vcf} -delete"*/
+	//afterScript "find $workflow.workDir -name ${haplotype_caller_vcf} -delete"
 
 	input:
 	file(haplotype_caller_vcf) from haplotype_caller_final_vcf_rna_seq_ch
@@ -1726,7 +1922,7 @@ process protein_db_construction {
 
 	container "zhanglab18/customprodbj:1.1.0"
 
-	/*afterScript "find $workflow.workDir -name ${hg19_multianno} -delete"*/
+	//afterScript "find $workflow.workDir -name ${hg19_multianno} -delete"
 
 	input:
 	file mrna_database_fa
@@ -1763,15 +1959,13 @@ if(params.paired_rna_seq) {
 
 		container "zhanglab18/rsem:1.2.26"
 
-		beforeScript "mkdir -p ${params.results}/${params.sampleID}"
-
-		publishDir "${params.results}/${params.sampleID}", mode: "copy", overwrite: true
+		publishDir "${params.results}/${params.sampleID}/${params.variant_calling}", mode: "copy", overwrite: true
 
 		input:
 		file genome_fasta
 		file refseq_human_hg19_gtf
-		val x from star_mapping_variant_call
 
+		val run_rsem from star_mapping_done_ch
 		set sample, file(reads) from grouped_raw_reads_rna_seq_ch3
 
 		output:
@@ -1785,7 +1979,7 @@ if(params.paired_rna_seq) {
 			--star-path /opt/STAR-2.6.0a/bin/Linux_x86_64 \
 			-p ${params.threads.mapping} \
 			${genome_fasta} \
-			/tmp/${params.sampleID}
+			/opt/${params.sampleID}
 
 		/opt/RSEM-1.2.26/rsem-calculate-expression \
 			--paired-end \
@@ -1795,14 +1989,14 @@ if(params.paired_rna_seq) {
 			--gzipped-read-file \
 			${reads[0]} \
 			${reads[1]} \
-			/tmp/${params.sampleID} \
+			/opt/${params.sampleID} \
 			${params.sampleID}
 		"""
 	}
-}
 
 
-else {
+} else {
+
 
 	/* Runs for paired-end reads when paired_rna_seq == false */
 
@@ -1812,15 +2006,13 @@ else {
 
 		container "zhanglab18/rsem:1.2.26"
 
-		beforeScript "mkdir -p ${params.results}/${params.sampleID}"
-
-		publishDir "${params.results}/${params.sampleID}", mode: "copy", overwrite: true
+		publishDir "${params.results}/${params.sampleID}/${params.variant_calling}", mode: "copy", overwrite: true
 
 		input:
 		file genome_fasta
 		file refseq_human_hg19_gtf
-		val x from star_mapping_variant_call
 
+		val run_rsem from star_mapping_done_ch
 		set sample, file(reads) from grouped_raw_reads_rna_seq_ch3
 
 		output:
@@ -1834,7 +2026,7 @@ else {
 			--star-path /opt/STAR-2.6.0a/bin/Linux_x86_64 \
 			-p ${params.threads.mapping} \
 			${genome_fasta} \
-			/tmp/${params.sampleID}
+			/opt/${params.sampleID}
 
 		/opt/RSEM-1.2.26/rsem-calculate-expression \
 			--star \
@@ -1842,7 +2034,7 @@ else {
 			-p ${params.threads.mapping} \
 			--gzipped-read-file \
 			${reads} \
-			/tmp/${params.sampleID} \
+			/opt/${params.sampleID} \
 			${params.sampleID}
 		"""
 	}
@@ -1853,19 +2045,17 @@ process evidence_and_expression_addition {
 
 	container "zhanglab18/neoflow:latest"
 
-	beforeScript "mkdir -p ${params.results}/${params.sampleID}"
-
 	//afterScript "find $workflow.workDir -name ${snv_data} -delete; find $workflow.workDir -name ${reference_matrix} -delete; find $workflow.workDir -name ${gene_expression_data} -delete; find $workflow.workDir -name ${variant_peptide_data} -delete; find $workflow.workDir -name ${ibaq_txt} -delete"
 
-	publishDir "${params.results}/${params.sampleID}", mode: "move", overwrite: true
+	publishDir "${params.results}/${params.sampleID}/${params.variant_calling}", mode: "copy", overwrite: true
 
 	input:
 	file(ibaq_txt) from deepflq_wxs_ch
 	file(gene_expression_data) from rsem_rna_seq_ch
 	file(variant_peptide_data) from msgfplus_wxs_ch
+	file(protein_ref_db) from protein_db_reference_wxs_ch
 	file(snv_data) from protein_db_construction_rna_seq_ch
 	file(reference_matrix) from peptide_binding_prediction_wxs_ch
-	file(pro_ref_db) from protein_db_reference
 
 	output:
 	file("*") into evidence_and_expression_addition_ch
@@ -1878,12 +2068,9 @@ process evidence_and_expression_addition {
 	    --pro_var ${variant_peptide_data} \
 	    --rna_var ${snv_data} \
 	    --rna_exp ${gene_expression_data} \
+	    --db ${protein_ref_db} \
 	    -m ${reference_matrix} \
-	    --db ${pro_ref_db} \
 	    -f ${params.mhc_affinity_cutoff} \
 	    -o .
 	"""
 }
-
-
-
