@@ -582,7 +582,7 @@ if (params.variant_calling == "varscan2") {
 
 
 	/*
-	 * Concatenate VCF files (for example split by chromosome). Note that the input and output VCFs will have the same number of columns.
+	 * Concatenate VCF files. Note that the input and output VCFs will have the same number of columns.
 	 */
 
 	process vcf_concatenate {
@@ -668,11 +668,11 @@ if (params.variant_calling == "varscan2") {
 	}
 
 
-	/* 
-	 * Fix a VCF if INFO or FILTER are missing.
+	/*
+	 * Add GT tag to Strelka VCF files where the GT is missing from the FORMAT field for the NORMAL and TUMOR samples.
 	 */
 
-	process fix_vcf {
+	process add_info_tags {
 
 		tag "wxs"
 
@@ -684,13 +684,38 @@ if (params.variant_calling == "varscan2") {
 		file(concatenated_vcf) from concatenated_vcf_wxs_ch
 
 		output:
-		file("${concatenated_vcf.baseName}.fixed.vcf") into variant_calling_vcf_wxs_ch
+		file("${concatenated_vcf.baseName}.fixed.vcf") into info_tag_added_vcf_wxs_ch
 
 		script:
 		"""
-		java -jar /jvarkit/dist/fixvcf.jar < ${concatenated_vcf} > ${concatenated_vcf.baseName}.out.vcf
+		#!/usr/bin/env bash
 
-		cat ${concatenated_vcf.baseName}.out.vcf | awk '{if(/^##/) print; else if(/^#/) print "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n"\$0; else print \$1"\t"\$2"\t"\$3"\t"\$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8"\tGT:"\$9"\t./.:"\$10"\t./.:"\$11;}' - > ${concatenated_vcf.baseName}.fixed.vcf
+		cat ${concatenated_vcf} | awk '{if(/^#/) print; else print \$1"\t"\$2"\t"\$3"\t"\$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8"\tGT:"\$9"\t./.:"\$10"\t./.:"\$11;}' > ${concatenated_vcf.baseName}.fixed.vcf
+		"""
+	}
+
+
+	/* 
+	 * Fix a VCF if INFO or FILTER are missing.
+	 */
+
+	process fix_vcf {
+
+		tag "wxs"
+
+		container "zhanglab18/jvarkit:latest"
+
+		//afterScript "find $workflow.workDir -name ${info_tag_added} -delete"
+
+		input:
+		file(info_tag_added) from info_tag_added_vcf_wxs_ch
+
+		output:
+		file("${info_tag_added.baseName}.fixed.vcf") into variant_calling_vcf_wxs_ch
+
+		script:
+		"""
+		java -jar /jvarkit/dist/fixvcf.jar < ${info_tag_added} > ${info_tag_added.baseName}.fixed.vcf
 		"""
 	}
 
