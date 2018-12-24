@@ -19,7 +19,7 @@ if (params.help) {
 	log.info '	--sampleID                STRING     a unique string to identify the sample source or ID.'
 	log.info '	--paired_dna_seq          BOOLEAN    <true> for paired-end DNA-SEQ reads. <false> otherwise.'
 	log.info '	--paired_rna_seq          BOOLEAN    <true> for paired-end RNA-SEQ reads. <false> otherwise.'
-	log.info '  --variant_calling         STRING     mutation caller for WXS "varscan2" or "mutect2" or "strelka2".'
+	log.info '	--variant_calling         STRING     mutation caller for WXS "varscan2" or "mutect2" or "strelka2".'
 	log.info '	--genome_fasta            FILE       indexed hg19 Human reference genome.'
 	log.info '	--known_dbsnps_file       FILE       indexed dbSNP file hg19 VCF.'
 	log.info '	--cosmic_file             FILE       indexed VCF file of COSMIC sites.'
