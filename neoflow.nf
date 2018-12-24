@@ -1403,7 +1403,7 @@ if (params.paired_dna_seq) {
 		file(filtered_fastq_1) from samtools_filtered_wxs_ch
 
 		output:
-		file("*.tsv"), file("*.pdf") into optitype_final_wxs_ch
+		set file("*.tsv"), file("*.pdf") into optitype_final_wxs_ch
 
 		script:
 		"""
