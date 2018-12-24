@@ -1329,7 +1329,7 @@ if (params.paired_dna_seq) {
 		set sample, file(reads) from grouped_raw_reads_wxs_ch2
 
 		output:
-		set file("${params.sampleID}.optitype.pair_1.sam") into bwa_index_and_mem_sam_wxs_ch
+		file("${params.sampleID}.optitype.pair_1.sam") into bwa_index_and_mem_sam_wxs_ch
 
 		when:
 		"$sample" == "tumor"
@@ -1354,10 +1354,10 @@ if (params.paired_dna_seq) {
 		afterScript "find $workflow.workDir -name ${sam_file_raw_1} -delete"
 
 		input:
-		set file(sam_file_raw_1) from bwa_index_and_mem_sam_wxs_ch
+		file(sam_file_raw_1) from bwa_index_and_mem_sam_wxs_ch
 
 		output: 
-		set file("${sam_file_raw_1.baseName}.bam") into optitype_bam_wxs_ch
+		file("${sam_file_raw_1.baseName}.bam") into optitype_bam_wxs_ch
 
 		script:
 		"""
@@ -1375,10 +1375,10 @@ if (params.paired_dna_seq) {
 		afterScript "find $workflow.workDir -name ${bam_1} -delete"
 
 		input:
-		set file(bam_1) from optitype_bam_wxs_ch
+		file(bam_1) from optitype_bam_wxs_ch
 
 		output:
-		set file("${bam_1.baseName}.fastq") into samtools_filtered_wxs_ch
+		file("${bam_1.baseName}.fastq") into samtools_filtered_wxs_ch
 
 		script:
 		"""
@@ -1400,10 +1400,10 @@ if (params.paired_dna_seq) {
 		publishDir "${params.results}/${params.sampleID}/${params.variant_calling}", mode: "copy", overwrite: true
 
 		input:
-		set file(filtered_fastq_1) from samtools_filtered_wxs_ch
+		file(filtered_fastq_1) from samtools_filtered_wxs_ch
 
 		output:
-		set file("*.tsv"), file("*.pdf") into optitype_final_wxs_ch
+		file("*.tsv"), file("*.pdf") into optitype_final_wxs_ch
 
 		script:
 		"""
