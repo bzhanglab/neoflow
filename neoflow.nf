@@ -1225,7 +1225,7 @@ if (params.paired_dna_seq) {
 		set file("${params.sampleID}.optitype.pair_1.sam"), file("${params.sampleID}.optitype.pair_2.sam") into bwa_index_and_mem_sam_wxs_ch
 
 		when:
-		"$sample" == "tumor"
+		"$sample" == "normal"
 
 		script:
 		"""
@@ -1332,7 +1332,7 @@ if (params.paired_dna_seq) {
 		file("${params.sampleID}.optitype.pair_1.sam") into bwa_index_and_mem_sam_wxs_ch
 
 		when:
-		"$sample" == "tumor"
+		"$sample" == "normal"
 
 		script:
 		"""
