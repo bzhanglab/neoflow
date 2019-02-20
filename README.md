@@ -1,5 +1,7 @@
 # NeoFlow: a proteogenomics pipeline for neoantigen discovery
 
+[![HitCount](http://hits.dwyl.io/bzhanglab/neoflow.svg)](http://hits.dwyl.io/bzhanglab/neoflow)
+
 ## Description
 
 NeoFlow is a standalone tool developed based on Nextflow and Docker and is developed for tumor neoantigens identification using DNA-Seq, RNA-Seq and MS/MS data.
