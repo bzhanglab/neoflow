@@ -1,7 +1,7 @@
 # NeoFlow
 NeoFlow: a proteogenomics pipeline for neoantigen discovery
 
-Neoflow includes four modules:
+NeoFlow includes four modules:
 
 
 1. HLA typing: neoflow_hlatyping.nf
