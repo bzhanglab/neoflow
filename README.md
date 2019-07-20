@@ -43,10 +43,6 @@ git clone https://github.com/bingzhang16/neoflow
 
 6. Install **netMHCpan** by following the instructions provide at [http://www.cbs.dtu.dk/services/doc/netMHCpan-4.0.readme](http://www.cbs.dtu.dk/services/doc/netMHCpan-4.0.readme). 
 
-7. It's recommended to have the directory structure of the working directory as shown below.
-
-8. Edit the [*nextflow.config*](https://github.com/bingzhang16/neoflow/blob/master/nextflow.config) as required.
-
 
 ## Usage
 
