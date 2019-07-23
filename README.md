@@ -20,7 +20,7 @@ NeoFlow supports both label free and iTRAQ/TMT data.
 1. Download neoflow:
 
 ```sh
-git clone https://github.com/bingzhang16/neoflow
+git clone https://github.com/bzhanglab/neoflow
 ```
 
 2. Install [Docker](https://docs.docker.com/install/) engine 1.10.x (or higher).
