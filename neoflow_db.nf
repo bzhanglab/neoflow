@@ -1,5 +1,7 @@
 #!/usr/bin/env nextflow
 
+params.help = null
+
 /* Prints help when asked for and exits */
 
 def helpMessage() {
@@ -8,141 +10,140 @@ def helpMessage() {
     neoflow => variant annotation and customized database construction
     =========================================
     Usage:
-    nextflow run neoflow-db.nf
-    Mandatory arguments:
-      --file                      The prefix for novel proteins in database, default is "VAR"
-      --out_dir                   Output folder, default is "./"
-      --cpu                       The number of CPUs
-
-    Annovar arguments:
-      --buildver                  Enzyme used for protein digestion. Default is trypsin
-      --protocol                  The number of allowed missed cleavage sites. Default is 2
-      --operation                 The error window on experimental peptide mass values, default is 10
-      --anno_dir                  The unit of --tol, ppm or Da. Default is ppm
-
+    nextflow run neoflow_db.nf
     """.stripIndent()
 }
 
-
-params.help       = false 
-// Annovar parameters
-params.buildver   = "hg38"
-params.protocol   = "refGene"
-params.operation  = "g"
-params.anno_dir = false // annotation data folder for annovar 
-
-
-params.cpu = 0
-params.file = false // mapping file
-params.out_dir = "./"
-params.prefix = "test"
-
-// Show help emssage
-if (params.help){
-    helpMessage()
-    exit 0
-}
-
-
-out_dir = file(params.out_dir)
-cpus = params.cpu
-
 // parameters for varaint annotation: Annovar
-annovar_buildver = params.buildver // 
-annovar_protocol = params.protocol //
-annovar_operation = params.operation 
-annovar_anno_dir  = file(params.anno_dir)
-
-out_dir = file(params.out_dir)
-out_prefix = params.prefix
-// sample\texperiment\tfile\tfile_type
-// a\te1\ta.vcf;b.vcf\tsomatic;germline
-mapping_file = file(params.file)
+annovar_buildver = params.annovar.buildver // 
+annovar_protocol = params.annovar.protocol //
+annovar_operation = params.annovar.operation 
+annovar_reference = params.annovar.reference
+annovar_anno_dir  = file(params.annovar.anno_dir)
+annovar_soft = params.annovar.annovar
+experiment_name = params.experiment
 
 
+map_file = file(params.map_file)
 
-process pre_processing {
-	tag "${mapping_file}"
+out_dir = file(params.cpj_out_dir)
+
+/* Pre-process vcf files for annovar input */
+
+process run_annovar {
+
+	tag "$experiment_name"
+
 
 	input:
-	file mapping_file
+	file map_file
 
 	output:
-	file "*-mapping_file.tsv" into single_experiment_map_files
+	file(map_file) into annovar_results_ch
 
 	script:
 	"""
-	#!/usr/bin/env /usr/local/bin/Rscript
-	library(dplyr)
-	library(readr)
-	a = read.delim("${mapping_file}")
-	experiment_names = unique(a[,"experiment"])
-	for(f in experiment_names){
-		dat = a %>% filter(experiment == f)
-		out_file = paste(f,"-mapping_file.tsv",sep="")
-		write_tsv(dat,out_file)
-	}
-	
-	"""
-}
+	#!/bin/sh
+	mkdir -p ${annovar_anno_dir}/somatic
+	mkdir -p ${annovar_anno_dir}/germline
+	input_file=${map_file}_germline_somatic.txt
+	echo "sample	somatic	germline" > \$input_file
 
+	sed "s|base_dir|$baseDir|g" ${map_file} > ${map_file}_used
 
-process variant_annotation {
-	tag "${single_experiment_map_file}"
+	sed 1d ${map_file}_used | while read -r experiment sample germline_vcf somatic_vcf
+	do
+		echo "\${sample}	${annovar_anno_dir}/somatic/\${sample}.${annovar_buildver}_multianno.txt	${annovar_anno_dir}/germline/\${sample}.${annovar_buildver}_multianno.txt" >> \$input_file
+		perl ${annovar_soft}/convert2annovar.pl \
+			-format vcf4 \
+			\$germline_vcf > \${germline_vcf}.avinput
+		perl ${annovar_soft}/table_annovar.pl \${germline_vcf}.avinput ${annovar_reference} \
+			-buildver ${annovar_buildver} \
+			-out ${annovar_anno_dir}/germline/\${sample} \
+			-protocol ${annovar_protocol} \
+			-operation ${annovar_operation} \
+			-nastring . \
+            --thread 8 \
+            --maxgenethread 8 \
+            -polish \
+            -otherinfo
 
-	input:
-	file single_experiment_map_file from single_experiment_map_files.flatten()
-	file annovar_anno_dir
+        perl ${annovar_soft}/convert2annovar.pl \
+			-format vcf4 \
+			\$somatic_vcf > \${somatic_vcf}.avinput
+		perl ${annovar_soft}/table_annovar.pl \${somatic_vcf}.avinput ${annovar_reference} \
+			-buildver ${annovar_buildver} \
+			-out ${annovar_anno_dir}/somatic/\${sample} \
+			-protocol ${annovar_protocol} \
+			-operation ${annovar_operation} \
+			-nastring . \
+            --thread 8 \
+            --maxgenethread 8 \
+            -polish 
+            -otherinfo
+    done
 
-	output:
-	set val(experiment_name),file("${ofile}") into anno_file
-	file("*_multianno.txt") into v_multianno_file
-
-	script:
-	experiment_name = "${single_experiment_map_file}".replaceFirst(/-mapping_file.tsv/, "")
-	ofile = experiment_name + "_anno.txt"
-	"""
-	#!/bin/bash
-	#!/usr/bin/env /usr/local/bin/python
-	variant_annotation.py -i ${single_experiment_map_file} \
-		-d ${annovar_anno_dir} \
-		-b ${annovar_buildver} \
-		-c ${cpus} \
-		-o ./ \
-		-f ${ofile} \
-		-a /usr/local/annovar/table_annovar.pl
+    cp \$input_file ${annovar_anno_dir}/${experiment_name}_germline_somatic.txt
 	"""
 }
 
 process database_construction {
-	tag "database_construction"
 
-	//container "biocontainers/bwa:0.7.15"
+	tag "$experiment_name"
 
-	//afterScript "find $workflow.workDir -name ${fastq1} -delete; find $workflow.workDir -name ${fastq2} -delete"
+	container "zhanglab18/customprodbj:1.1.0"
 
 	input:
-	set val(experiment_name), file(anno_f) from anno_file
-	file annovar_anno_dir
-	file v_multianno_file
+	file(annovar_result_file) from annovar_results_ch
 
 	output:
-	file("*.fasta") into final_db
+	file(annovar_result_file) into db_cons_ch
 
 	script:
-	mrna_fa   = "${annovar_anno_dir}/${annovar_buildver}_${annovar_protocol}Mrna.fa"
-	gene_anno = "${annovar_anno_dir}/${annovar_buildver}_${annovar_protocol}.txt"
+	
 	"""
-	CPJ=`which customprodbj.jar`
-	java -jar \$CPJ \
-		-f ${anno_f} \
-		-d ${mrna_fa} \
-		-r ${gene_anno} \
+	#!/bin/sh
+	java -jar /opt/customprodbj.jar \
+		-f ${annovar_anno_dir}/${experiment_name}_germline_somatic.txt \
+		-d ${annovar_reference}/${annovar_buildver}_${annovar_protocol}Mrna.fa \
+		-r ${annovar_reference}/${annovar_buildver}_${annovar_protocol}.txt \
+		-ref ${out_dir}/protein.pro-ref.fasta \
 		-t \
-		-o ./ \
-		-p2 ${experiment_name} \
-		-ref ref.fasta
-
+		-o ${out_dir}/
 	"""
 }
+
+process generate_new_db{
+	
+	tag "$experiment_name"
+
+	input:
+	file(annovar_result_file) from db_cons_ch
+
+	output:
+	file(annovar_result_file) into new_db_cons_ch
+
+	script:
+	"""
+	#!/bin/sh
+	java -cp ${baseDir}/bin/ thanks ${out_dir}/${experiment_name}_germline_somatic-var.fasta
+	"""
+}
+
+process generate_decoy_db{
+	
+	tag "$experiment_name"
+
+	input:
+	file(annovar_result_file) from new_db_cons_ch
+
+	output:
+
+	script:
+	"""
+	Rscript ${baseDir}/bin/pga_generate_decoy.R ${out_dir}/ ${experiment_name} ${annovar_reference}/../
+	"""
+}
+
+
 

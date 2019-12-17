@@ -1,312 +1,314 @@
 #!/usr/bin/env nextflow
 
+params.help = null
+
 /* Prints help when asked for and exits */
 
 def helpMessage() {
     log.info"""
     =========================================
-    neoflow => MS/MS searching
+    neoflow => MS/MS identification
     =========================================
     Usage:
-    nextflow run neoflow-msms.nf
-    Mandatory arguments:
-      --novel_protein_prefix      The prefix for novel proteins in database, default is "VAR"
-      --decoy_protein_prefix      The prefix for decoy proteins in database, default is "###REV###"
-      --db                        The protein database
-      --cont                      The contaminant protein database
-      --ms                        MS/MS data
-      --refdb                     Reference protein database
-      --para_file                 Parameter file for MS/MS searching
-      --out_dir                   Output folder, default is "./"
-      --prefix                    The prefix of output files
-      --cpu                       The number of CPUs
-      --se                        The ID number of search engines
-
-    PepQuery arguments:
-      --enzyme                    Enzyme used for protein digestion. Default is trypsin
-      --c                         The number of allowed missed cleavage sites. Default is 2
-      --tol                       The error window on experimental peptide mass values, default is 10
-      --tolu                      The unit of --tol, ppm or Da. Default is ppm
-      --fixmod                    Fixed modification. The format is like : 1,2,3. Different modification is represented by different number
-      --varmod                    Variable modification. The format is the same with --fixMod;
-
+    nextflow run neoflow_msms.nf
     """.stripIndent()
 }
 
+experiment = params.experiment
+mgf_dir = file(params.mgf_dir)
+cpj_result_dir = file(params.cpj_out_dir)
+software = params.search_engine
+pepquery_result_dir = file(params.pepquery.out_dir)
+autort_input_folder = file(params.autoRt.input)
+autort_output_folder = file(params.autoRt.output)
+autoRT = params.autoRt.run
 
-params.help = false 
-params.novel_protein_prefix =  "VAR"
-params.decoy_protein_prefix = "###REV###"
+out_dir = file(params.search_result_dir)
 
-params.db = false
-params.cont = false
-params.ms = false
-params.refdb = false
-params.para_file = false
-params.out_dir = "./"
-params.prefix = "test"
-params.cpu = 2
-params.se = 1
+process msms_search{
 
-// 
-params.enzyme = 1 // enzyme used for PepQuery
-params.c = 2 // The number of allowed missed cleavage sites. Default is 2;
-params.tol = 10
-params.tolu = "ppm"
-params.itol = 0.05 // da
-params.varmod = false
-params.fixmod = false
+    tag "$experiment"
+
+    //container "zhanglab18/msgfplus:2018.07.17"
+
+    publishDir "$out_dir", mode: "copy", overwrite: true
+
+    input:
+    file(mgf_dir)
+
+    output:
+    set file("*") into msgf_results_ch
+
+    script:
+    if (software == "msgf") {
+        """
+        #!/bin/sh
+
+        for mgf_file in ${mgf_dir}/*.mgf
+        do
+            basename=`basename \${mgf_file} .mgf`
+            java -Xmx48g -jar ${baseDir}/bin/msgf+/MSGFPlus.jar \
+                -s \$mgf_file \
+                -d ${cpj_result_dir}/${experiment}_target_decoy.fasta \
+                -conf ${baseDir}/bin/msgf+/msgf_conf.txt \
+                -o \${basename}.mzid
+        done
+        """
+    } else if (software == "comet") {
+        """
+        #!/bin/sh
+        database="${cpj_result_dir}/${experiment}_target_decoy.fasta"
+        sed "s|database_path|\$database|g" ${baseDir}/bin/comet/decoy_model.params > ./${experiment}.params
+        for mgf_file in ${mgf_dir}/*.mgf
+        do
+            basename=`basename \${mgf_file} .mgf`
+            ${baseDir}/bin/comet/comet.2018014.linux.exe -P./${experiment}.params -N./\${basename}_rawResults \${mgf_file}
+            sed -i '1d' \${basename}_rawResults.txt
+            sed -i '1 s/\$/\tna/' \${basename}_rawResults.txt
+        done
+        """
+        
+    } else if (software == "xtandem") {
+        """
+        #!/bin/sh
+        database="${cpj_result_dir}/${experiment}_target_decoy.fasta"
+        sed "s|database_path|\$database|g" ${baseDir}/bin/xtandem/decoy_db_model.xml > ${experiment}_db.xml
+        for mgf_file in ${mgf_dir}/*.mgf
+        do
+            basename=`basename \${mgf_file} .mgf`
+            db_par="${experiment}_db.xml"
+            result="\${basename}.xml"
+            sed "s|fraction_mgf|\$mgf_file|g; s|db_parameter|\$db_par|g; s|result_path|\$result|g" ${baseDir}/bin/xtandem/decoy_parameter_model.xml > \${basename}_parameter.xml
+        
+            ${baseDir}/bin/xtandem/tandem.exe \${basename}_parameter.xml
+
+            java -Xmx10g -jar ${baseDir}/bin/mzidlib/mzidentml-lib-1.6.12-SNAPSHOT.jar Tandem2mzid \
+                \${basename}.xml \
+                \${basename}.mzid \
+                -outputFragmentation false \
+                -decoyRegex XXX_ \
+                -databaseFileFormatID MS:1001348 \
+                -massSpecFileFormatID MS:1001062 \
+                -idsStartAtZero false \
+                -compress false \
+                -proteinCodeRegex "\\S+"
+        done
+        """       
+    }
+    
+}
+
+process convert_mzid_calculata_fdr{
+
+    tag "$experiment"
+
+    input:
+    file(mzid_files) from msgf_results_ch.collect()
+    file(mgf_dir)
+
+    output:
+    file(mgf_dir) into pga_result_ch
+
+    script:
+    if (software == "msgf") {
+        """
+        mkdir -p ${out_dir}/peptide_level/
+        mkdir -p ${out_dir}/psm_level/
+        mkdir -p ${out_dir}/peptide_level/global_fdr
+        mkdir -p ${out_dir}/psm_level/global_fdr
+        Rscript ${baseDir}/bin/msgf+/convert_merge_calculate_fdr.R ${out_dir}/ ${cpj_result_dir}/${experiment}_germline_somatic-var.fasta.new.fasta $experiment
+        """
+    } else if (software == "comet") {
+        """
+        mkdir -p ${out_dir}/peptide_level/
+        mkdir -p ${out_dir}/psm_level/
+        mkdir -p ${out_dir}/peptide_level/global_fdr
+        mkdir -p ${out_dir}/psm_level/global_fdr
+        Rscript ${baseDir}/bin/comet/convert_merge_calculate_fdr.R ${out_dir}/ ${cpj_result_dir}/${experiment}_germline_somatic-var.fasta.new.fasta $experiment
+        """
+    
+    } else if (software == "xtandem") {
+        """
+        mkdir -p ${out_dir}/peptide_level/
+        mkdir -p ${out_dir}/psm_level/
+        mkdir -p ${out_dir}/peptide_level/global_fdr
+        mkdir -p ${out_dir}/psm_level/global_fdr
+        Rscript ${baseDir}/bin/xtandem/convert_merge_calculate_fdr.R ${out_dir}/ ${cpj_result_dir}/${experiment}_germline_somatic-var.fasta.new.fasta $experiment
+        """
+    }
+}
+
+process generate_mgf_index{
+
+    tag "$experiment"
+
+    input:
+    file(mgf_dir) from pga_result_ch
+
+    output:
+    file(mgf_dir) into generate_index_ch
+
+    script:
+    """
+    #!/bin/sh
+
+    java -cp ${baseDir}/bin/PDV-1.5.4_generate_index/PDV-1.5.4_generate_index.jar PDVGUI.generate_index $mgf_dir $mgf_dir
+    """
+}
+
+process prepare_pepquery_input{
+
+  tag "$experiment"
+
+  input:
+  file(mgf_dir) from generate_index_ch
+
+  output:
+  file (mgf_dir) into pre_process_ch
+
+  script:
+  """
+  #!/bin/sh
+  rm ${out_dir}/peptide_level/global_fdr/*_fraction.txt_var_pep.txt
+  Rscript ${baseDir}/bin/generate_pepquery_input.R ${out_dir}/peptide_level/
+  """
+}
+
+process run_pepquery{
+
+  tag "$experiment"
+
+  input:
+  file (mgf_dir) from pre_process_ch
+
+  output:
+  file (mgf_dir) into pepquery_ch
+
+  script:
+  """
+  #!/bin/sh
+
+  for file in ${mgf_dir}/*mgf
+  do
+    basename=`basename \${file}`
+    fraction=`echo "\${basename/\\.mgf/}"`
+    mkdir -p ${pepquery_result_dir}/\${fraction}
+    java -Xmx40g -jar ${baseDir}/bin/pepquery/pepquery-1.1-jar-with-dependencies.jar \
+      -pep ${out_dir}/peptide_level/global_fdr/\${fraction}_fraction.txt_var_pep.txt \
+      -db ${cpj_result_dir}/protein.pro-ref.fasta \
+      -ms \${file} \
+      -fixMod 6 \
+      -varMod 107 \
+      -cpu 8 \
+      -minScore 12 \
+      -tol 20 \
+      -itol 0.05 \
+      -n 10000 \
+      -um \
+      -m 1 \
+      -prefix \$fraction \
+      -o ${pepquery_result_dir}/\${fraction}/
+  done
+  """
+}
+
+if (autoRT == "Yes") {
+    
+    process psm_fdr_fraction{
+
+    tag "$experiment"
+
+    input:
+    file(mgf_dir) from pepquery_ch
+
+    output:
+    file(mgf_dir) into psm_fdr_ch
+
+    script:
+    """
+    #!/bin/sh
+    Rscript ${baseDir}/bin/psm_level_fraction.R ${out_dir}/psm_level/
+    """
+    }
+
+    process combine_psm_input{
+
+    tag "$experiment"
+
+    input:
+    file(mgf_dir) from psm_fdr_ch
+
+    output:
+    file(mgf_dir) into combine_fdr_ch
+
+    script:
+    """
+    #!/bin/sh
+    mkdir -p ${autort_input_folder}/intermediate_files/
+    for file in ${out_dir}/peptide_level/global_fdr/*fraction.txt
+    do
+    basename=`basename \${file}`
+    fraction=`echo "\${basename/_fraction\\.txt/}"`
+    psm_file=${out_dir}/psm_level/global_fdr/\${basename}
+    Rscript ${baseDir}/bin/add_psm_result.R \$file ${mgf_dir}/\${fraction}.mgf_index.txt ${autort_input_folder}/intermediate_files/\${fraction} \$psm_file
+    done
+    """
+    }
+
+    process prepare_autoRT_input{
+
+    tag "$experiment"
+
+    input:
+    file(mgf_dir) from combine_fdr_ch  
+
+    output:
+    file(mgf_dir) into prepare_autoRT_ch
+
+    script:
+    """
+    #!/bin/sh
+    for file in ${autort_input_folder}/intermediate_files/*normal_psm.txt
+    do
+    basename=`basename \${file}`
+    fraction=`echo "\${basename/_normal_psm\\.txt/}"`
+    python ${baseDir}/bin/prepare_train_data_${software}.py \$fraction \$file ${autort_input_folder}/ "train"
+    done
+
+    for file in ${autort_input_folder}/intermediate_files/*variant_psm.txt
+    do
+    basename=`basename \${file}`
+    fraction=`echo "\${basename/_variant_psm\\.txt/}"`
+    python ${baseDir}/bin/prepare_train_data_${software}.py \$fraction \$file ${autort_input_folder}/ "prediction"
+    done
+
+    """
+    }
+
+    process run_autoRT{
+    
+    tag "$experiment"
+
+    input:
+    file(mgf_dir) from prepare_autoRT_ch
+
+    output:
 
 
-// Show help emssage
-if (params.help){
-    helpMessage()
-    exit 0
+    """
+    #!/bin/sh
+    for file in ${autort_input_folder}/*train.txt
+    do
+    basename=`basename \${file} _train.txt`
+    mkdir -p ${autort_output_folder}/\${basename}
+    python ${baseDir}/bin/autoRT/autort.py train -i \$file -o ${autort_output_folder}/\${basename}/ -e 40 -b 64 -u m -m ${baseDir}/bin/autoRT/models/base_models_PXD006109/model.json -rlr -n 10
+    python ${baseDir}/bin/autoRT/autort.py predict -t ${autort_input_folder}/\${basename}_prediction.txt -s ${autort_output_folder}/\${basename}/model.json -o ${autort_output_folder}/\${basename}/ -p \${basename}
+    done
+    """
+
+    }
 }
 
 
-// Input parameters
-db = file(params.db)
-cont_db = file(params.cont)
-// a folder which contains multiple MGF files or a single MGF file
-ms_data = file(params.ms)
-msms_searching_para_file = file(params.para_file)
-out_dir = file(params.out_dir)
-out_prefix = params.prefix
-novel_protein_prefix = params.novel_protein_prefix
-cpus = params.cpu
-// search engine: 1=>MS-GF+, 2=>X!Tandem, 3=>Comet
-search_engine_ID = params.se
-
-reference_protein_database = file(params.refdb) // reference protein database
-
-// parameters for novel peptide validation (PepQuery)
-pepquery_tol = params.tol
-pepquery_tolu = params.tolu // ppm or da
-pepquery_enzyme = params.enzyme 
-pepquery_c = params.c
-pepquery_varmod = params.varmod
-pepquery_fixmod = params.fixmod
-pepquery_itol = params.itol
-
-
-
-
-
-
-process build_target_decoy_db {
-	tag "build_target_decoy_db"
-
-	//container "zhanglab18/pga"
-
-	input:
-	file db
-	file cont_db
-
-	output:
-	file "target_decoy_db.fasta" into target_decoy_db
-
-	script:
-	"""
-	#!/usr/bin/env /usr/local/bin/Rscript
-	library(PGA)
-	target_db = "${db}"
-	cont_db = "${cont_db}"
-	final_db = "target_decoy_db.fasta"
-	buildTargetDecoyDB(target_db,cont_file=cont_db,decoyPrefix="###REV###",output=final_db)
-
-	"""
-}
-
-
-if(ms_data.isFile()){
-	println "Process single MS/MS file."
-	ms_data_file = file(params.ms)
-}else{
-	println "Process multiple MS/MS files."
-	ms_data_file = Channel.fromPath("${params.ms}/*.mgf")
-}
-
-process msms_searching{
-	tag "msms_searching"
-
-	//container "zhanglab18/neoflow:1.0.0"
-
-	input:
-	file ms_file from ms_data_file
-	file para_file from msms_searching_para_file
-	file target_decoy_db
-
-	output:
-	file "${ms_file.baseName}.mzid" into psm_raw_file
-
-	script:
-	if (search_engine_ID == 1){
-		// MS-GF+
-		"""
-		java -jar /usr/local/msgf/MSGFPlus.jar \
-			-conf ${para_file} \
-			-s ${ms_file} \
-			-d ${target_decoy_db} \
-			-tda 0 \
-			-o ${ms_file.baseName}.mzid
-
-		"""
-	}else if(search_engine_ID == 2){
-		// X!Tandem
-		"""
-		tandem.exe ${para_file}
-		## convert xml to mzid
-		java -jar /usr/local/bin/mzidentml-lib-1.6.12-SNAPSHOT.jar Tandem2mzid  \
-			tandem_result.xml \
-			${ms_file.baseName}.mzid \
-			-outputFragmentation false \
-			-decoyRegex "${params.decoy_protein_prefix}" \
-			-databaseFileFormatID "MS:1001348" \
-			-massSpecFileFormatID MS:1001062 \
-			-idsStartAtZero false \
-			-compress false \
-			-proteinCodeRegex "\\S+"
-	
-		"""
-	}else if(search_engine_ID == 3){
-		// Comet
-		"""
-		comet.exe -p ${para_file}
-		## convert comet to tsv
-		comet2tsv x.csv ${ms_file.baseName}.tsv
-		"""
-	}
-}
-
-
-process post_process{
-	tag "post_process"
-
-	//container "zhanglab18/neoflow:1.0.0"
-
-	input:
-	file psm_raw_file
-	file target_decoy_db
-
-	output:
-	file "./sample-rawPSMs.txt" into psm_raw_tsv
-
-	script:
-	if (search_engine_ID == 1){
-		// MS-GF+
-		"""
-		#!/usr/bin/env /usr/local/bin/Rscript
-		library(PGA)
-		parserGear(file="${psm_raw_file}",
-			db="${target_decoy_db}",
-			decoyPrefix="${params.decoy_protein_prefix}",
-			novelPrefix="${params.novel_protein_prefix}",
-			prefix="sample",
-			xmx=60,
-			thread=8,
-			alignment=0,
-			outdir="./")
-		raw_psm <- read.delim("./sample-rawPSMs.txt")
-		colnames(raw_psm)[2] <- "score"
-		write.table(raw_psm,"./sample-rawPSMs.txt", row.names = FALSE, quote = FALSE, sep = "\t")
-
-		"""
-	}else if(search_engine_ID == 2){
-		// X!Tandem
-		"""
-		echo "PASS"
-		"""
-	}else if(search_engine_ID == 3){
-		// Comet
-		"""
-		echo "PASS"
-		"""
-	}
-}
-
-
-
-
-combine_psm_raw = psm_raw_tsv.collectFile(name:"combine_psm_raw.tsv",keepHeader:true)
-
-
-process fdr_estimation {
-	tag "fdr_estimation"
-
-	//container "zhanglab18/neoflow:1.0.0"
-
-	//afterScript "find $workflow.workDir -name ${fastq1} -delete; find $workflow.workDir -name ${fastq2} -delete"
-
-	input:
-	file combine_psm_raw
-	file target_decoy_db
-
-	output:
-	file "*pga-peptideSummary.txt" into psm_filtered
-	file "novel_peptide.txt" into novel_peptide_file
-
-	script:
-	"""
-	#!/usr/bin/env /usr/local/bin/Rscript
-	library(PGA)
-	psm_raw_file = "${combine_psm_raw}" 
-	db = "${target_decoy_db}"
-	decoyPrefix = "${params.decoy_protein_prefix}"
-	novelPrefix = "${params.novel_protein_prefix}"
-	calculateFDR(psmfile=psm_raw_file,
-			db=db,
-			peptide_level=TRUE,
-			fdr=0.01,
-			decoyPrefix=decoyPrefix,
-			novelPrefix=novelPrefix,
-			better_score_lower=FALSE,
-			remap=FALSE,
-			out_dir="./",
-			protein_inference=FALSE,
-			xmx=4)
-	psm_data = read.delim("./pga-peptideSummary.txt",stringsAsFactors=FALSE)
-	library(dplyr)
-	psm_qvalue = psm_data %>% filter(Qvalue <= 0.01,isSAP == "true", isdecoy == "false") %>% 
-		select(peptide) %>% 
-		distinct()
-	write.table(psm_qvalue,file="novel_peptide.txt",sep="\t",col.names=FALSE,quote=FALSE,row.names=FALSE)
-
-	"""
-}
-
-process novel_peptide_validation {
-	tag "novel_peptide_validation"
-
-	//container "zhanglab18/neoflow:1.0.0"
-
-	input:
-	file novel_peptide_file
-	file ms_data_file
-
-	output:
-	file "validation/*" into validation_result
-
-	script:
-	"""
-	java -jar /usr/local/bin/pepquery-1.2-jar-with-dependencies.jar \
-		-c ${pepquery_c} \
-		-cpu 0 \
-		-e ${pepquery_enzyme} \
-		-fixMod ${pepquery_fixmod} \
-		-fragmentMethod 1 \
-		-itol ${pepquery_itol} \
-		-m 1 \
-		-minScore 12 \
-		-n 10000 \
-		-tol ${pepquery_tol} \
-		-um \
-		-varMod ${pepquery_varmod} \
-		-ms ${ms_data_file} \
-		-pep ${novel_peptide_file} \
-		-o validation/ \
-		-db ${reference_protein_database}
-	"""
-}
 
 
