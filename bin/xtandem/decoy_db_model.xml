@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<bioml label="x! taxon-to-file matching list">
+	<taxon label="human">
+		<file format="peptide" URL="database_path"/>
+	</taxon>
+</bioml>

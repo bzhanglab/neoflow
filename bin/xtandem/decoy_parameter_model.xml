@@ -1,0 +1,74 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="tandem-input-style.xsl"?>
+<bioml>
+<note type="input" label="spectrum, fragment monoisotopic mass error">0.05</note>
+<note type="input" label="spectrum, parent monoisotopic mass error plus">20.0</note>
+<note type="input" label="spectrum, parent monoisotopic mass error minus">20.0</note>
+<note type="input" label="spectrum, parent monoisotopic mass isotope error">no</note>
+<note type="input" label="spectrum, fragment monoisotopic mass error units">Daltons</note>
+<note type="input" label="spectrum, parent monoisotopic mass error units">ppm</note>
+<note type="input" label="spectrum, fragment mass type">monoisotopic</note>
+<note type="input" label="spectrum, dynamic range">100.0</note>
+<note type="input" label="spectrum, total peaks">50</note>
+<note type="input" label="spectrum, maximum parent charge">8</note>
+<note type="input" label="spectrum, use noise suppression">no</note>
+<note type="input" label="spectrum, minimum parent m+h">500.0</note>
+<note type="input" label="spectrum, minimum fragment mz">150.0</note>
+<note type="input" label="spectrum, minimum peaks">15</note>
+<note type="input" label="spectrum, threads">8</note>
+<note type="input" label="spectrum, sequence batch size">1000</note>
+<note type="input" label="spectrum, path">fraction_mgf</note>
+<note type="input" label="residue, modification mass">57.021464@C</note>
+<note type="input" label="residue, potential modification mass">15.994915@M</note>
+<note type="input" label="residue, potential modification motif"></note>
+<note type="input" label="list path, taxonomy information">db_parameter</note>
+<note type="input" label="protein, taxon">human</note>
+<note type="input" label="protein, cleavage site">[KR]|{P}</note>
+<note type="input" label="protein, modified residue mass file"></note>
+<note type="input" label="protein, cleavage C-terminal mass change">+17.002735</note>
+<note type="input" label="protein, cleavage N-terminal mass change">+1.007825</note>
+<note type="input" label="protein, N-terminal residue modification mass">0.0</note>
+<note type="input" label="protein, C-terminal residue modification mass">0.0</note>
+<note type="input" label="protein, homolog management">no</note>
+<note type="input" label="refine">no</note>
+<note type="input" label="refine, modification mass"></note>
+<note type="input" label="refine, sequence path"></note>
+<note type="input" label="refine, tic percent">20</note>
+<note type="input" label="refine, spectrum synthesis">yes</note>
+<note type="input" label="refine, maximum valid expectation value">0.1</note>
+<note type="input" label="refine, potential N-terminus modifications">+42.010565@[</note>
+<note type="input" label="refine, potential C-terminus modifications"></note>
+<note type="input" label="refine, unanticipated cleavage">yes</note>
+<note type="input" label="refine, potential modification mass"></note>
+<note type="input" label="refine, point mutations">no</note>
+<note type="input" label="refine, use potential modifications for full refinement">no</note>
+<note type="input" label="refine, point mutations">no</note>
+<note type="input" label="refine, potential modification motif"></note>
+<note type="input" label="scoring, minimum ion count">4</note>
+<note type="input" label="scoring, maximum missed cleavage sites">2</note>
+<note type="input" label="scoring, x ions">no</note>
+<note type="input" label="scoring, y ions">yes</note>
+<note type="input" label="scoring, z ions">no</note>
+<note type="input" label="scoring, a ions">no</note>
+<note type="input" label="scoring, b ions">yes</note>
+<note type="input" label="scoring, c ions">no</note>
+<note type="input" label="scoring, cyclic permutation">no</note>
+<note type="input" label="scoring, include reverse">no</note>
+<note type="input" label="output, log path"></note>
+<note type="input" label="output, message">testing 1 2 3</note>
+<note type="input" label="output, one sequence copy">yes</note>
+<note type="input" label="output, sequence path"></note>
+<note type="input" label="output, path">result_path</note>
+<note type="input" label="output, sort results by">protein</note>
+<note type="input" label="output, path hashing">no</note>
+<note type="input" label="output, xsl path">/tmp/colon_batch_ID/results/colon_batch_ID_decoy.xsl</note>
+<note type="input" label="output, parameters">yes</note>
+<note type="input" label="output, performance">yes</note>
+<note type="input" label="output, spectra">no</note>
+<note type="input" label="output, histograms">yes</note>
+<note type="input" label="output, proteins">yes</note>
+<note type="input" label="output, sequences">yes</note>
+<note type="input" label="output, results">valid</note>
+<note type="input" label="output, maximum valid expectation value">10</note>
+<note type="input" label="output, histogram column width">30</note>
+</bioml>
