@@ -117,6 +117,8 @@ process generate_new_db{
 	
 	tag "$experiment_name"
 
+	container "bzhanglab/neoflow:1.0"
+
 	input:
 	file(annovar_result_file) from db_cons_ch
 
@@ -133,6 +135,8 @@ process generate_new_db{
 process generate_decoy_db{
 	
 	tag "$experiment_name"
+
+    container "proteomics/pga:latest"
 
 	input:
 	file(annovar_result_file) from new_db_cons_ch

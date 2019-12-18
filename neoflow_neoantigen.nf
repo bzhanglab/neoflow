@@ -18,10 +18,13 @@ map_file = file(params.map_file)
 out_dir = file(params.neoantigen.out_dir)
 hla_class_dir = file(params.neoantigen.hla_class_results_dir)
 cpj_result_dir  = file(params.cpj_out_dir)
+netMHC_path = params.neoantigen.netMHC_path
 
 
 process split_infor {
   tag "Separate customprodbj results"
+
+  container "proteomics/pga:latest"
 
   input:
   file map_file
@@ -44,6 +47,8 @@ process MHC_peptide_prediction {
 
     //publishDir "${out_dir}", mode: "copy", overwrite: true
 
+    container "bzhanglab/python:3.6.8"
+    
     input:
     file map_file from new_info_ch
 
@@ -60,7 +65,7 @@ process MHC_peptide_prediction {
             -fa ${cpj_result_dir}/\${experiment}_germline_somatic-var.fasta.new.fasta \
             -txt ${cpj_result_dir}/\${sample}_new_somatic_varInfo.txt \
             -o $out_dir \
-            -netmhcpan /home/kail/software/netMHCpan-4.0/netMHCpan \
+            -netmhcpan $netMHC_path \
             -nt 6
     done
     """

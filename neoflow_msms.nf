@@ -21,6 +21,7 @@ software = params.search_engine
 pepquery_result_dir = file(params.pepquery.out_dir)
 autort_input_folder = file(params.autoRt.input)
 autort_output_folder = file(params.autoRt.output)
+autoRT_path = params.autoRt.autoRT_path
 autoRT = params.autoRt.run
 
 out_dir = file(params.search_result_dir)
@@ -29,7 +30,7 @@ process msms_search{
 
     tag "$experiment"
 
-    //container "zhanglab18/msgfplus:2018.07.17"
+    container "bzhanglab/neoflow:1.0"
 
     publishDir "$out_dir", mode: "copy", overwrite: true
 
@@ -47,7 +48,7 @@ process msms_search{
         for mgf_file in ${mgf_dir}/*.mgf
         do
             basename=`basename \${mgf_file} .mgf`
-            java -Xmx48g -jar ${baseDir}/bin/msgf+/MSGFPlus.jar \
+            java -Xmx10g -jar /opt/MSGFPlus.jar \
                 -s \$mgf_file \
                 -d ${cpj_result_dir}/${experiment}_target_decoy.fasta \
                 -conf ${baseDir}/bin/msgf+/msgf_conf.txt \
@@ -62,7 +63,7 @@ process msms_search{
         for mgf_file in ${mgf_dir}/*.mgf
         do
             basename=`basename \${mgf_file} .mgf`
-            ${baseDir}/bin/comet/comet.2018014.linux.exe -P./${experiment}.params -N./\${basename}_rawResults \${mgf_file}
+            /opt/comet.2018014.linux.exe -P./${experiment}.params -N./\${basename}_rawResults \${mgf_file}
             sed -i '1d' \${basename}_rawResults.txt
             sed -i '1 s/\$/\tna/' \${basename}_rawResults.txt
         done
@@ -80,9 +81,9 @@ process msms_search{
             result="\${basename}.xml"
             sed "s|fraction_mgf|\$mgf_file|g; s|db_parameter|\$db_par|g; s|result_path|\$result|g" ${baseDir}/bin/xtandem/decoy_parameter_model.xml > \${basename}_parameter.xml
         
-            ${baseDir}/bin/xtandem/tandem.exe \${basename}_parameter.xml
+            /opt/tandem-linux-17-02-01-4/bin/./tandem.exe \${basename}_parameter.xml
 
-            java -Xmx10g -jar ${baseDir}/bin/mzidlib/mzidentml-lib-1.6.12-SNAPSHOT.jar Tandem2mzid \
+            java -Xmx10g -jar /opt/mzidlib-1.7/mzidlib-1.7.jar Tandem2mzid \
                 \${basename}.xml \
                 \${basename}.mzid \
                 -outputFragmentation false \
@@ -101,6 +102,8 @@ process msms_search{
 process convert_mzid_calculata_fdr{
 
     tag "$experiment"
+
+    container "proteomics/pga:latest"
 
     input:
     file(mzid_files) from msgf_results_ch.collect()
@@ -142,6 +145,8 @@ process generate_mgf_index{
 
     tag "$experiment"
 
+    container "bzhanglab/neoflow:1.0"
+
     input:
     file(mgf_dir) from pga_result_ch
 
@@ -159,6 +164,8 @@ process generate_mgf_index{
 process prepare_pepquery_input{
 
   tag "$experiment"
+
+  container "proteomics/pga:latest"
 
   input:
   file(mgf_dir) from generate_index_ch
@@ -178,6 +185,8 @@ process run_pepquery{
 
   tag "$experiment"
 
+  container "bzhanglab/neoflow:1.0"
+
   input:
   file (mgf_dir) from pre_process_ch
 
@@ -190,10 +199,9 @@ process run_pepquery{
 
   for file in ${mgf_dir}/*mgf
   do
-    basename=`basename \${file}`
-    fraction=`echo "\${basename/\\.mgf/}"`
+    fraction=`basename \${file} .mgf`
     mkdir -p ${pepquery_result_dir}/\${fraction}
-    java -Xmx40g -jar ${baseDir}/bin/pepquery/pepquery-1.1-jar-with-dependencies.jar \
+    java -Xmx10g -jar /opt/PepQuery_v1.3.0/pepquery-1.3.jar \
       -pep ${out_dir}/peptide_level/global_fdr/\${fraction}_fraction.txt_var_pep.txt \
       -db ${cpj_result_dir}/protein.pro-ref.fasta \
       -ms \${file} \
@@ -218,6 +226,8 @@ if (autoRT == "Yes") {
 
     tag "$experiment"
 
+    container "proteomics/pga:latest"
+
     input:
     file(mgf_dir) from pepquery_ch
 
@@ -234,6 +244,8 @@ if (autoRT == "Yes") {
     process combine_psm_input{
 
     tag "$experiment"
+
+    container "proteomics/pga:latest"
 
     input:
     file(mgf_dir) from psm_fdr_ch
@@ -259,6 +271,8 @@ if (autoRT == "Yes") {
 
     tag "$experiment"
 
+    container "bzhanglab/python:3.6.8"
+
     input:
     file(mgf_dir) from combine_fdr_ch  
 
@@ -272,14 +286,14 @@ if (autoRT == "Yes") {
     do
     basename=`basename \${file}`
     fraction=`echo "\${basename/_normal_psm\\.txt/}"`
-    python ${baseDir}/bin/prepare_train_data_${software}.py \$fraction \$file ${autort_input_folder}/ "train"
+    python3 ${baseDir}/bin/prepare_train_data_${software}.py \$fraction \$file ${autort_input_folder}/ "train"
     done
 
     for file in ${autort_input_folder}/intermediate_files/*variant_psm.txt
     do
     basename=`basename \${file}`
     fraction=`echo "\${basename/_variant_psm\\.txt/}"`
-    python ${baseDir}/bin/prepare_train_data_${software}.py \$fraction \$file ${autort_input_folder}/ "prediction"
+    python3 ${baseDir}/bin/prepare_train_data_${software}.py \$fraction \$file ${autort_input_folder}/ "prediction"
     done
 
     """
@@ -288,6 +302,8 @@ if (autoRT == "Yes") {
     process run_autoRT{
     
     tag "$experiment"
+
+    container "bzhanglab/python:3.6.8"
 
     input:
     file(mgf_dir) from prepare_autoRT_ch
@@ -301,8 +317,8 @@ if (autoRT == "Yes") {
     do
     basename=`basename \${file} _train.txt`
     mkdir -p ${autort_output_folder}/\${basename}
-    python ${baseDir}/bin/autoRT/autort.py train -i \$file -o ${autort_output_folder}/\${basename}/ -e 40 -b 64 -u m -m ${baseDir}/bin/autoRT/models/base_models_PXD006109/model.json -rlr -n 10
-    python ${baseDir}/bin/autoRT/autort.py predict -t ${autort_input_folder}/\${basename}_prediction.txt -s ${autort_output_folder}/\${basename}/model.json -o ${autort_output_folder}/\${basename}/ -p \${basename}
+    python3 $autoRT_path/autort.py train -i \$file -o ${autort_output_folder}/\${basename}/ -e 40 -b 64 -u m -m ${baseDir}/bin/autoRT/models/base_models_PXD006109/model.json -rlr -n 10
+    python3 $autoRT_path/autort.py predict -t ${autort_input_folder}/\${basename}_prediction.txt -s ${autort_output_folder}/\${basename}/model.json -o ${autort_output_folder}/\${basename}/ -p \${basename}
     done
     """
 

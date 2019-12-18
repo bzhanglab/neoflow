@@ -19,7 +19,6 @@ genome_bam_folder = file(params.hla.bam_folder)
 hla_reference = file(params.hla.hla_reference)
 results_folder = file(params.hla.optitype_output)
 map_file = file(params.map_file)
-threads = params.threads
 
 process convert_bam {
 	tag "params.experiment"
@@ -61,8 +60,8 @@ process bwa_index {
 	bwa index ${hla_reference}/hla_reference_dna.fasta
 	sed 1d $map_file | while read -r experiment sample germline_vcf somatic_vcf
     do
-		bwa mem -t ${threads} -M ${hla_reference}/hla_reference_dna.fasta ${results_folder}/\${sample}/\${sample}.pair_1.fastq > ${results_folder}/\${sample}/\${sample}.pair_1.sam
-		bwa mem -t ${threads} -M ${hla_reference}/hla_reference_dna.fasta ${results_folder}/\${sample}/\${sample}.pair_2.fastq > ${results_folder}/\${sample}/\${sample}.pair_2.sam
+		bwa mem -t 6 -M ${hla_reference}/hla_reference_dna.fasta ${results_folder}/\${sample}/\${sample}.pair_1.fastq > ${results_folder}/\${sample}/\${sample}.pair_1.sam
+		bwa mem -t 6 -M ${hla_reference}/hla_reference_dna.fasta ${results_folder}/\${sample}/\${sample}.pair_2.fastq > ${results_folder}/\${sample}/\${sample}.pair_2.sam
 		rm ${results_folder}/\${sample}/\${sample}.pair_1.fastq ${results_folder}/\${sample}/\${sample}.pair_2.fastq
 	done
 	"""
