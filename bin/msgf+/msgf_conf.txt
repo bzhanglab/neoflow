@@ -75,7 +75,7 @@ TDA=0
 #Number of concurrent threads to be executed
 #  Default: Number of available cores
 #  To use three threads use NumThreads=3
-NumThreads=20
+NumThreads=6
 
 #Minimum peptide length to consider
 #  Default: 6

@@ -7,7 +7,7 @@ decoy_search = 0                       # 0=no (default), 1=concatenated search, 
 peff_format = 0                        # 0=no (normal fasta, default), 1=PEFF PSI-MOD, 2=PEFF Unimod
 peff_obo =                             # path to PSI Mod or Unimod OBO file
 
-num_threads = 20                        # 0=poll CPU to set num threads; else specify num threads directly (max 128)
+num_threads = 6                        # 0=poll CPU to set num threads; else specify num threads directly (max 128)
 
 #
 # masses

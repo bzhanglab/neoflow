@@ -16,8 +16,8 @@ for (file in input_files){
 	        decoyPrefix="XXX_",
         	novelPrefix="VAR",
 	        prefix=sample,
-        	xmx=60,
-	        thread=8,
+        	xmx=10,
+	        thread=6,
         	alignment=0,
 	        outdir=output)
 	data <- fread(paste(output, sample, "-rawPSMs.txt", sep=""))
@@ -39,7 +39,7 @@ calculateFDR(psmfile=paste(output, batchID, "-rawPSMs.txt", sep=""),
         score_t = 0,
         protein_inference=FALSE,
         out_dir=paste(output, "peptide_level/global_fdr", sep=""),
-        xmx=20)
+        xmx=10)
 calculateFDR(psmfile=paste(output, batchID, "-rawPSMs.txt", sep=""),
         db=database,
         fdr=0.01,
@@ -50,4 +50,4 @@ calculateFDR(psmfile=paste(output, batchID, "-rawPSMs.txt", sep=""),
         score_t = 0,
         protein_inference=FALSE,
         out_dir=paste(output, "psm_level/global_fdr", sep=""),
-        xmx=20)
+        xmx=10)

@@ -33,7 +33,7 @@ calculateFDR(psmfile=paste(output, batchID, "-rawPSMs.txt", sep=""),
         score_t = 0,
         protein_inference=FALSE,
         out_dir=paste(output, "peptide_level/global_fdr", sep=""),
-        xmx=20)
+        xmx=10)
 calculateFDR(psmfile=paste(output, batchID, "-rawPSMs.txt", sep=""),
         db=database,
         fdr=0.01,
@@ -44,4 +44,4 @@ calculateFDR(psmfile=paste(output, batchID, "-rawPSMs.txt", sep=""),
         score_t = 0,
         protein_inference=FALSE,
         out_dir=paste(output, "psm_level/global_fdr", sep=""),
-        xmx=20)
+        xmx=10)
