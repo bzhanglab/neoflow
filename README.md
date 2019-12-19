@@ -34,7 +34,7 @@ git clone https://github.com/bzhanglab/neoflow
 
 4. Install **ANNOVAR** by following the instruction at [http://annovar.openbioinformatics.org/en/latest/](http://annovar.openbioinformatics.org/en/latest/).
 
-5. Install **netMHCpan 4** by following the instruction at [http://www.cbs.dtu.dk/services/doc/netMHCpan-4.0.readme](http://www.cbs.dtu.dk/services/doc/netMHCpan-4.0.readme). 
+5. Install **netMHCpan 4.0** by following the instruction at [http://www.cbs.dtu.dk/services/doc/netMHCpan-4.0.readme](http://www.cbs.dtu.dk/services/doc/netMHCpan-4.0.readme). 
 
 6. Install **AutoRT** by following the instruction at [https://github.com/bzhanglab/AutoRT](https://github.com/bzhanglab/AutoRT). This is optional and it is only required when users want to use the RT based validation for novel peptide identifications using AutoRT.
 
