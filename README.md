@@ -1,15 +1,20 @@
 # NeoFlow
 
-## Description
+## Overview
 
-NeoFlow: a proteogenomics pipeline for neoantigen discovery
+**NeoFlow: a proteogenomics pipeline for neoantigen discovery**
 
 NeoFlow includes four modules:
 
+1. Variant annotation and customized database construction: neoflow_db.nf;
+2. Variant peptide identification: neoflow_msms.nf;
 
-1. HLA typing: neoflow_hlatyping.nf
-2. Variant annotation and customized database construction: neoflow_db.nf
-3. Variant peptide identification: neoflow_msms.nf
+   * MS/MS searching. Three search engines are available: MS-GF+, X!Tandem and Comet;
+   * FDR estimation: global FDR estimation;
+   * Novel peptide validation by PepQuery;
+   * RT based validation for novel peptide identifications using AutoRT: optional (GPU required).
+
+3. HLA typing: neoflow_hlatyping.nf;
 4. Neoantigen prediction: neoflow_neoantigen.nf
 
 
@@ -27,32 +32,58 @@ git clone https://github.com/bzhanglab/neoflow
 
 3. Install [Nextflow](https://www.nextflow.io/docs/latest/getstarted.html). Note that Nextflow requires **BASH** and **Java 8** or higher to be installed or run. More information can be found in the Nextflow [get started](https://www.nextflow.io/docs/latest/getstarted.html) page.
 
-4. Install **AutoRt** by following the instructions provide at [https://github.com/bzhanglab/AutoRT](https://github.com/bzhanglab/AutoRT).
+4. Install **ANNOVAR** by following the instruction at [http://annovar.openbioinformatics.org/en/latest/](http://annovar.openbioinformatics.org/en/latest/).
 
-5. Install **ANNOVAR** by following the instructions provide at [http://annovar.openbioinformatics.org/en/latest/](http://annovar.openbioinformatics.org/en/latest/).
+5. Install **netMHCpan 4** by following the instruction at [http://www.cbs.dtu.dk/services/doc/netMHCpan-4.0.readme](http://www.cbs.dtu.dk/services/doc/netMHCpan-4.0.readme). 
 
-6. Install **netMHCpan** by following the instructions provide at [http://www.cbs.dtu.dk/services/doc/netMHCpan-4.0.readme](http://www.cbs.dtu.dk/services/doc/netMHCpan-4.0.readme). 
+6. Install **AutoRT** by following the instruction at [https://github.com/bzhanglab/AutoRT](https://github.com/bzhanglab/AutoRT). This is optional and it is only required when users want to use the RT based validation for novel peptide identifications using AutoRT.
 
-7. Add **AutoRt**, **ANNOVAR** and **netMHCpan** path into configure file _nextflow.config_.
+After **ANNOVAR**, **netMHCpan**  and **AutoRT** are installed, users must update the path for each of these tools in the configure file **nextflow.config** as shown below before users run NeoFlow.
 
-8. Download test data from [http://pdv.zhang-lab.org/data/download/neoflow_example_data/test_data.zip](http://pdv.zhang-lab.org/data/download/neoflow_example_data/test_data.zip) and uncompress it. Then put whole _test_data_ folder with neoflow scripts. 
+```
+annovar{
+   ...
+   annovar = "/data/tools/annovar/" // update this accordingly
+   ...
+}
 
+neoantigen{
+   ...
+   netMHC_path = "/data/tools/netMHCpan-4.0/netMHCpan" // update this accordingly
+   ...
+}
+
+autoRt{
+    ...
+    autoRT_path = "/data/tools/autoRT/"
+    ...
+}
+```
+
+All other tools used by NeoFlow have been dockerized and will be automatically installed when NeoFlow is run in the first time on a computer.
 
 ## Usage
 
-At first, users need build customized database.
+### 1. Variant annotation and customized database construction
+
 ```sh
 nextflow run neoflow_db.nf
 ```
-And then, run msms search.
+### 2. Variant peptide identification
+Please note that the customized database generated in the first step will be used in this step. 
 ```sh
 nextflow run neoflow_msms.nf
 ```
-Users need run hlatyping before neoantigen prediction.
+### 3. HLA typing
 ```sh
 nextflow run neoflow_hlatyping.nf
 ```
+### 4. Neoantigen prediction
 ```sh
 nextflow run neoflow_neoantigen.nf
 ```
-Most of parameters and files' path can be modified in _nextflow.config_. For msms search engines' parameters, there are different parameter files in _bin/msgf+_,  _bin/comet_ and  _bin/xtandem_.
+For each of these modules, all the parameters are contained in the **nextflow.config** file.
+
+##  Example data
+
+An example data can be downloaded by clicking [test data ](http://pdv.zhang-lab.org/data/download/neoflow_example_data/test_data.zip). 
