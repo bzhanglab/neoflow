@@ -79,6 +79,7 @@ nextflow run neoflow_msms.nf
 nextflow run neoflow_hlatyping.nf
 ```
 ### 4. Neoantigen prediction
+Please note that the results generated in step 1-3 will be used in this step. 
 ```sh
 nextflow run neoflow_neoantigen.nf
 ```
