@@ -7,7 +7,7 @@ params.help = null
 def helpMessage() {
     log.info"""
     =========================================
-    neoflow => HLA tuping
+    neoflow => HLA typing
     =========================================
     Usage:
     nextflow run neoflow_hla_typing.nf
