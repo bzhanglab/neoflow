@@ -59,7 +59,7 @@ process MHC_peptide_prediction {
     #!/bin/sh
     sed 1d $map_file | while read -r experiment sample germline_vcf somatic_vcf
     do
-        python3 ${baseDir}/bin/binding_prediction_debug.py \
+        python3 ${baseDir}/bin/binding_prediction.py \
             -id \$sample \
             -a ${hla_class_dir}/\${sample}/\${sample}_optitype_result.tsv \
             -fa ${cpj_result_dir}/\${experiment}_germline_somatic-var.fasta.new.fasta \
