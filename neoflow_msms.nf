@@ -7,7 +7,7 @@ params.help = null
 def helpMessage() {
     log.info"""
     =========================================
-    neoflow => MS/MS identification
+    neoflow => Variant peptide identification
     =========================================
     Usage:
     nextflow run neoflow_msms.nf
