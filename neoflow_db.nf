@@ -14,10 +14,31 @@ def helpMessage() {
     """.stripIndent()
 }
 
+
+if (params.help){
+    helpMessage()
+    exit 0
+}
+
+/*
+ * Input parameters validation
+ */
+
+if( !(params.annovar.buildver in ['hg19','hg38'])) { exit 1, "Invalid genome version: '${params.annovar.buildver}'" }
+
+
+/*
+ * validate input files
+ */
+
+annovar_tool = file(params.annovar.annovar + "/table_annovar.pl")
+if( !annovar_tool.exists() ) exit 1, "ANNOVAR perl is invalid: ${annovar_tool}"
+
+
 // parameters for varaint annotation: Annovar
-annovar_buildver = params.annovar.buildver // 
+annovar_buildver = params.annovar.buildver //
 annovar_protocol = params.annovar.protocol //
-annovar_operation = params.annovar.operation 
+annovar_operation = params.annovar.operation
 annovar_reference = params.annovar.reference
 annovar_anno_dir  = file(params.annovar.anno_dir)
 annovar_soft = params.annovar.annovar
@@ -25,8 +46,18 @@ experiment_name = params.experiment
 
 
 map_file = file(params.map_file)
+if( !map_file.exists() ) exit 1, "variant mapping file is invalid: ${map_file}"
 
 out_dir = file(params.cpj_out_dir)
+
+
+println "${annovar_buildver}"
+println "${annovar_protocol}"
+println "${annovar_operation}"
+println "${annovar_reference}"
+println "${annovar_anno_dir}"
+println "${annovar_soft}"
+println "${experiment_name}"
 
 /* Pre-process vcf files for annovar input */
 
@@ -79,7 +110,7 @@ process run_annovar {
 			-nastring . \
             --thread 8 \
             --maxgenethread 8 \
-            -polish 
+            -polish
             -otherinfo
     done
 
@@ -100,7 +131,7 @@ process database_construction {
 	file(annovar_result_file) into db_cons_ch
 
 	script:
-	
+
 	"""
 	#!/bin/sh
 	java -jar /opt/customprodbj.jar \
@@ -114,7 +145,7 @@ process database_construction {
 }
 
 process generate_new_db{
-	
+
 	tag "$experiment_name"
 
 	container "bzhanglab/neoflow:1.0"
@@ -133,10 +164,10 @@ process generate_new_db{
 }
 
 process generate_decoy_db{
-	
+
 	tag "$experiment_name"
 
-    container "proteomics/pga:latest"
+        container "proteomics/pga:latest"
 
 	input:
 	file(annovar_result_file) from new_db_cons_ch
@@ -148,6 +179,3 @@ process generate_decoy_db{
 	Rscript ${baseDir}/bin/pga_generate_decoy.R ${out_dir}/ ${experiment_name} ${annovar_reference}/../
 	"""
 }
-
-
-
