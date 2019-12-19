@@ -7,7 +7,7 @@ params.help = null
 def helpMessage() {
     log.info"""
     =========================================
-    neoflow => Neoantigen prediction by NetMHCPan
+    neoflow => Neoantigen prediction
     =========================================
     Usage:
     nextflow run neoflow_neoantigen.nf
