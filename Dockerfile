@@ -1,3 +1,4 @@
+FROM python:3
 #specifying the base image
 FROM java:8
 #FROM ubuntu:latest
