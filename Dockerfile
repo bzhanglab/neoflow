@@ -1,4 +1,3 @@
-FROM python:3
 #specifying the base image
 FROM java:8
 #FROM ubuntu:latest
@@ -7,6 +6,10 @@ FROM biocontainers/biocontainers:v1.0.0_cv4
 MAINTAINER Kai Li <kail@bcm.edu>
 
 USER root
+
+
+RUN apt-get update \
+  && apt-get install -y python3-pip python3-dev \
 
 #install MSGFPlus
 RUN wget https://github.com/MSGFPlus/msgfplus/releases/download/v2019.07.03/MSGFPlus_v20190703.zip \
