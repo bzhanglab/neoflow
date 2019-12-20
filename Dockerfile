@@ -9,7 +9,7 @@ USER root
 
 
 RUN apt-get update \
-  && apt-get install -y python3-pip python3-dev \
+  && apt-get install -y python3-pip python3-dev 
 
 #install MSGFPlus
 RUN wget https://github.com/MSGFPlus/msgfplus/releases/download/v2019.07.03/MSGFPlus_v20190703.zip \
