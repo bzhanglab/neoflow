@@ -1,15 +1,37 @@
 #specifying the base image
-FROM java:8
-#FROM ubuntu:latest
-FROM biocontainers/biocontainers:v1.0.0_cv4
+FROM ubuntu:19.04
 
 MAINTAINER Kai Li <kail@bcm.edu>
 
-USER root
+#USER root
 
+ARG PYTHON=python3
+ARG PIP=pip3
 
-RUN apt-get update \
-  && apt-get install -y python3-pip python3-dev 
+# See http://bugs.python.org/issue19846
+ENV LANG C.UTF-8
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    wget \
+    tcsh \
+    git \
+    unzip \
+    pkg-config \
+    curl \
+    ${PYTHON} \
+    ${PYTHON}-pip && \
+    apt-get -y  install --fix-missing openjdk-8-jre && \
+    apt-get clean
+
+RUN ${PIP} --no-cache-dir install --upgrade \
+    pip \
+    setuptools
+
+# Some TF tools expect a "python" binary
+RUN ln -s $(which ${PYTHON}) /usr/local/bin/python
+
+RUN ${PIP} install numpy pandas biopython
 
 #install MSGFPlus
 RUN wget https://github.com/MSGFPlus/msgfplus/releases/download/v2019.07.03/MSGFPlus_v20190703.zip \
