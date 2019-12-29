@@ -67,7 +67,7 @@ Arguments:
 The txt file for parameter `--vcf_file` contains the path of VCF file(s) and its format is shown below:
 
 | experiment | sample | file | file_type |
-|---|---|---|---|---|
+|---|---|---|---|
 | TMT01 | T1 | T1_somatic.vcf;T1_rna.vcf | somatic;rna |
 | TMT01 | T2 | T2_somatic.vcf;T2_rna.vcf | somatic;rna |
 | TMT02 | T3 | T3_somatic.vcf;T3_rna.vcf | somatic;rna |
