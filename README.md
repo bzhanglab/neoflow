@@ -141,6 +141,9 @@ nextflow run neoflow_msms.nf --ms example_data/mgf/ \
                --pv_tol 20 \
                --pv_itol 0.05
 ```
+
+The input files for `--ms` and `--msms_para_file` can be downloaded from the [example data](http://pdv.zhang-lab.org/data/download/neoflow_example_data/example_data.tar.gz) prepared for testing. 
+
 The variant peptide identification result is in this file `output/novel_peptide_identification/novel_peptides_psm_pepquery.tsv`.
 
 The running time of above example is less than 15 minutes on a Linux server with 40 cores.
@@ -173,6 +176,9 @@ nextflow run neoflow_hlatyping.nf --hla_ref_dir example_data/hla_reference \
                   --out_dir output/ \
                   --cpu 40
 ```
+
+The input files for `--hla_ref_dir` and `--reads` can be downloaded from the [example data](http://pdv.zhang-lab.org/data/download/neoflow_example_data/example_data.tar.gz) prepared for testing. 
+
 The HLA typing result is in this file `output/hla_type/sample1/sample1_result.tsv`.
 
 The running time of above example is less than 10 minutes on a Linux server with 40 cores.
