@@ -64,6 +64,9 @@ RUN wget http://www.pepquery.org/data/PepQuery_v1.3.0.tar.gz \
 
 RUN wget -O /opt/customprodbj.jar https://github.com/wenbostar/Customprodbj/releases/download/v1.1.0/customprodbj.jar
 
+RUN wget -O /opt/pepmap.jar https://github.com/wenbostar/pepmap/releases/download/v1.0.0/pepmap.jar
+
+
 
 #chmod of /home/user and change working directory
 RUN chmod -R 755 /opt/
