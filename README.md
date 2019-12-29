@@ -34,7 +34,7 @@ git clone https://github.com/bzhanglab/neoflow
 
 4. Install **ANNOVAR** by following the instruction at [http://annovar.openbioinformatics.org/en/latest/](http://annovar.openbioinformatics.org/en/latest/).
 
-5. Install **netMHCpan 4.0** by following the instruction at [http://www.cbs.dtu.dk/services/doc/netMHCpan-4.0.readme](http://www.cbs.dtu.dk/services/doc/netMHCpan-4.0.readme). 
+5. Install **netMHCpan 4.0** by following the instruction at [http://www.cbs.dtu.dk/services/doc/netMHCpan-4.0.readme](http://www.cbs.dtu.dk/services/doc/netMHCpan-4.0.readme). **netMHCpan 4.0** must be installed in the folder of NeoFlow.
 
 6. Install [nvidia-docker](https://github.com/NVIDIA/nvidia-docker) (>=2.2.2) for [**AutoRT**](https://github.com/bzhanglab/AutoRT/) by following the instruction at [https://github.com/NVIDIA/nvidia-docker](https://github.com/NVIDIA/nvidia-docker). This is optional and it is only required when users want to use the RT based validation for novel peptide identifications using AutoRT.
 
@@ -232,9 +232,10 @@ nextflow run neoflow_neoantigen.nf --prefix sample1 \
                    --var_pep_file output/novel_peptide_identification/novel_peptides_psm_pepquery.tsv \
                    --var_pep_info output/customized_database/neoflow_crc_anno-varInfo.txt
 ```
+
 Please update  input for parameter `--netmhcpan_dir` before run the above example. 
 
-The neoantigen prediction result is in this file `output/novel_peptide_identification/novel_peptides_psm_pepquery.tsv`.
+The neoantigen prediction result is in this file `output/neoantigen_prediction/sample1_neoepitope_filtered_by_reference_add_variant_protein_evidence.tsv`.
 
 The running time of above example is less than 30 minutes on a Linux server with 40 cores.
 
