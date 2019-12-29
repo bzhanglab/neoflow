@@ -1,6 +1,58 @@
 #!/usr/bin/env nextflow
 
-params.help = null
+params.help       = false 
+// Annovar parameters
+params.ref_ver   = "hg19"
+params.protocol   = "refGene"
+//params.operation  = "g"
+params.ref_dir = false // annotation data folder for annovar 
+params.annovar_dir = false
+
+
+params.cpu = 0
+params.vcf_file = null // mapping file
+params.out_dir = "./output"
+
+
+def get_absolute_path(f,out_file){
+	myFile = file(f)
+
+	File new_File = new File(out_file)
+
+	allLines  = myFile.readLines()
+	new_File.write(allLines[0]+"\n")
+
+	headline = allLines[0].split("\t")
+	hmap = [:]
+	for(int i=0;i<headline.size();i++){
+		hmap[headline[i]] = i
+	}
+	allLines.remove(0)
+	for(line in allLines ) {
+    	d = line.split("\t")
+    	v_files = d[hmap["file"]].split(";");
+    	v_files_full_path = []
+    	for(int i=0;i<v_files.size();i++){
+    		v_files_full_path.add(new File(v_files[i]).absolutePath)
+    	}
+    	d[hmap["file"]] = v_files_full_path.join(";")
+    	new_File << d.join("\t") + "\n"
+	}
+}
+
+def format_fasta_db(db, new_db){
+	newDB = File(new_db)
+	newDB.write("")
+	String regex = /^>/
+	new File(db).eachLine { line ->
+    	if(line ==~ regex){
+    		d = line.split(" ")
+    		newDB.append(d[0]+"\n")
+    	}else{
+    		newDB.append(line+"\n")
+    	}
+	}
+}
 
 /* Prints help when asked for and exits */
 
@@ -11,171 +63,217 @@ def helpMessage() {
     =========================================
     Usage:
     nextflow run neoflow_db.nf
+    Arguments:
+      --vcf_file              A txt file contains VCF file(s)
+      --annovar_dir           ANNOVAR folder
+      --protocol              The parameter of "protocol" for ANNOVAR, default is "refGene"
+      --ref_dir               ANNOVAR annotation data folder
+      --ref_ver               The genome version, hg19 or hg38, default is "hg19"
+      --out_dir               Output folder, default is "./output"
+      --cpu                   The number of CPUs
+	  --help                  Print help message
+
     """.stripIndent()
 }
 
 
+// Show help emssage
 if (params.help){
     helpMessage()
     exit 0
 }
 
-/*
- * Input parameters validation
- */
 
-if( !(params.annovar.buildver in ['hg19','hg38'])) { exit 1, "Invalid genome version: '${params.annovar.buildver}'" }
+out_dir = file(params.out_dir)
+cpus = params.cpu
 
+// parameters for varaint annotation: Annovar
+annovar_buildver = params.ref_ver // 
+annovar_protocol = params.protocol //
+annovar_anno_dir  = file(params.ref_dir)
+
+out_dir = file(params.out_dir)
+
+if(!out_dir.isDirectory()){
+	out_dir_result = out_dir.mkdirs()
+	println out_dir_result ? "Create folder: $out_dir!" : "Cannot create directory: $myDir!"
+}
+
+// sample\texperiment\tfile\tfile_type
+// a\te1\ta.vcf;b.vcf\tsomatic;germline
+mapping_vcf_file = file(params.vcf_file)
+
+//
+annovar_operation = "g" 
 
 /*
  * validate input files
  */
-
-annovar_tool = file(params.annovar.annovar + "/table_annovar.pl")
+annovar_tool = file(params.annovar_dir + "/table_annovar.pl")
 if( !annovar_tool.exists() ) exit 1, "ANNOVAR perl is invalid: ${annovar_tool}"
 
-
-// parameters for varaint annotation: Annovar
-annovar_buildver = params.annovar.buildver //
-annovar_protocol = params.annovar.protocol //
-annovar_operation = params.annovar.operation
-annovar_reference = params.annovar.reference
-annovar_anno_dir  = file(params.annovar.anno_dir)
-annovar_soft = params.annovar.annovar
-experiment_name = params.experiment
+if( !mapping_vcf_file.exists() ) exit 1, "variant mapping file is invalid: ${mapping_vcf_file}"
 
 
-map_file = file(params.map_file)
-if( !map_file.exists() ) exit 1, "variant mapping file is invalid: ${map_file}"
+println "Format input mapping file: ${mapping_vcf_file}!"
+new_mapping_file = params.out_dir +"/" + mapping_vcf_file.getName()
+println "New mapping file: ${new_mapping_file}!"
+get_absolute_path(params.vcf_file,new_mapping_file)
+mapping_f = file(new_mapping_file)
 
-out_dir = file(params.cpj_out_dir)
 
+process pre_processing {
+	tag "${mapping_file}"
 
-println "${annovar_buildver}"
-println "${annovar_protocol}"
-println "${annovar_operation}"
-println "${annovar_reference}"
-println "${annovar_anno_dir}"
-println "${annovar_soft}"
-println "${experiment_name}"
+	echo true
 
-/* Pre-process vcf files for annovar input */
-
-process run_annovar {
-
-	tag "$experiment_name"
-
+	container "proteomics/pga:latest"
 
 	input:
-	file map_file
+	file mapping_file from mapping_f
 
 	output:
-	file(map_file) into annovar_results_ch
+	file "*-mapping_file.tsv" into single_experiment_map_files
 
 	script:
+
 	"""
-	#!/bin/sh
-	mkdir -p ${annovar_anno_dir}/somatic
-	mkdir -p ${annovar_anno_dir}/germline
-	input_file=${map_file}_germline_somatic.txt
-	echo "sample	somatic	germline" > \$input_file
+	#!/usr/bin/env /usr/local/bin/Rscript
 
-	sed "s|base_dir|$baseDir|g" ${map_file} > ${map_file}_used
+	library(dplyr)
+	library(readr)
+	
+	a = read.delim("${mapping_f}")
+	experiment_names = unique(a[,"experiment"])
+	for(f in experiment_names){
+		dat = a %>% filter(experiment == f) 
+		out_file = paste(f,"-mapping_file.tsv",sep="")
+		write_tsv(dat,out_file)
+	}
+	
+	"""
+}
 
-	sed 1d ${map_file}_used | while read -r experiment sample germline_vcf somatic_vcf
-	do
-		echo "\${sample}	${annovar_anno_dir}/somatic/\${sample}.${annovar_buildver}_multianno.txt	${annovar_anno_dir}/germline/\${sample}.${annovar_buildver}_multianno.txt" >> \$input_file
-		perl ${annovar_soft}/convert2annovar.pl \
-			-format vcf4 \
-			\$germline_vcf > \${germline_vcf}.avinput
-		perl ${annovar_soft}/table_annovar.pl \${germline_vcf}.avinput ${annovar_reference} \
-			-buildver ${annovar_buildver} \
-			-out ${annovar_anno_dir}/germline/\${sample} \
-			-protocol ${annovar_protocol} \
-			-operation ${annovar_operation} \
-			-nastring . \
-            --thread 8 \
-            --maxgenethread 8 \
-            -polish \
-            -otherinfo
 
-        perl ${annovar_soft}/convert2annovar.pl \
-			-format vcf4 \
-			\$somatic_vcf > \${somatic_vcf}.avinput
-		perl ${annovar_soft}/table_annovar.pl \${somatic_vcf}.avinput ${annovar_reference} \
-			-buildver ${annovar_buildver} \
-			-out ${annovar_anno_dir}/somatic/\${sample} \
-			-protocol ${annovar_protocol} \
-			-operation ${annovar_operation} \
-			-nastring . \
-            --thread 8 \
-            --maxgenethread 8 \
-            -polish
-            -otherinfo
-    done
+process variant_annotation {
+	tag "${single_experiment_map_file}"
 
-    cp \$input_file ${annovar_anno_dir}/${experiment_name}_germline_somatic.txt
+	container "bzhanglab/neoflow:1.0"
+
+	publishDir "${out_dir}/variant_annotation/", mode: "copy", overwrite: true
+
+	input:
+	file single_experiment_map_file from single_experiment_map_files.flatten()
+	file annovar_anno_dir
+
+	output:
+	set val(experiment_name),file("${ofile}") into anno_file
+	file("*_multianno.txt") into v_multianno_file
+
+	script:
+	experiment_name = "${single_experiment_map_file}".replaceFirst(/-mapping_file.tsv/, "")
+	ofile = experiment_name + "_anno.txt"
+	//annovar_pl = 
+	"""
+	#!/bin/bash
+	#!/usr/bin/env /usr/local/bin/python
+	python $baseDir/bin/variant_annotation.py -i ${single_experiment_map_file} \
+		-d ${annovar_anno_dir} \
+		-b ${annovar_buildver} \
+		-c ${cpus} \
+		-o ./ \
+		-f ${ofile} \
+		-a ${annovar_tool}
 	"""
 }
 
 process database_construction {
-
-	tag "$experiment_name"
-
-	container "zhanglab18/customprodbj:1.1.0"
-
-	input:
-	file(annovar_result_file) from annovar_results_ch
-
-	output:
-	file(annovar_result_file) into db_cons_ch
-
-	script:
-
-	"""
-	#!/bin/sh
-	java -jar /opt/customprodbj.jar \
-		-f ${annovar_anno_dir}/${experiment_name}_germline_somatic.txt \
-		-d ${annovar_reference}/${annovar_buildver}_${annovar_protocol}Mrna.fa \
-		-r ${annovar_reference}/${annovar_buildver}_${annovar_protocol}.txt \
-		-ref ${out_dir}/protein.pro-ref.fasta \
-		-t \
-		-o ${out_dir}/
-	"""
-}
-
-process generate_new_db{
-
 	tag "$experiment_name"
 
 	container "bzhanglab/neoflow:1.0"
 
+	publishDir "${out_dir}/customized_database/", mode: "copy", overwrite: true
+
 	input:
-	file(annovar_result_file) from db_cons_ch
+	set val(experiment_name), file(anno_f) from anno_file
+	file annovar_anno_dir
+	file v_multianno_file
 
 	output:
-	file(annovar_result_file) into new_db_cons_ch
+	file("*.fasta") into final_db
+	set val(experiment_name), file("${experiment_name}_anno-var.fasta") into target_customized_db_fa
+	set val(experiment_name), file("${experiment_name}_anno-varInfo.txt") into target_customized_db_info
+	file("ref.fasta") into refdb
+	file("*-varInfo.txt") into info
+	//file("${experiment_name}_anno-var_format.fasta") into target_customized_db_format_fa
+
+	script:
+	mrna_fa   = "${annovar_anno_dir}/${annovar_buildver}_${annovar_protocol}Mrna.fa"
+	gene_anno = "${annovar_anno_dir}/${annovar_buildver}_${annovar_protocol}.txt"
+	"""
+	java -jar /opt/customprodbj.jar \
+		-f ${anno_f} \
+		-d ${mrna_fa} \
+		-r ${gene_anno} \
+		-t \
+		-o ./ \
+		-p2 ${experiment_name} \
+		-ref ref.fasta
+	"""
+
+}
+
+process format_db {
+	tag "$experiment_name"
+
+	container "bzhanglab/neoflow:1.0"
+
+	publishDir "${out_dir}/customized_database/", mode: "copy", overwrite: true
+
+	input:
+	set val(experiment_name), file(target_customized_db) from target_customized_db_fa
+
+	output:
+	set val(experiment_name), file("*_format.fasta") into format_db_set
 
 	script:
 	"""
-	#!/bin/sh
-	java -cp ${baseDir}/bin/ thanks ${out_dir}/${experiment_name}_germline_somatic-var.fasta
+	python $baseDir/bin/format_db.py ${target_customized_db}
 	"""
+
 }
 
 process generate_decoy_db{
 
 	tag "$experiment_name"
 
-        container "proteomics/pga:latest"
+	container "proteomics/pga:latest"
+
+	publishDir "${out_dir}/customized_database/", mode: "copy", overwrite: true
 
 	input:
-	file(annovar_result_file) from new_db_cons_ch
+	set val(experiment_name), file(format_db) from format_db_set
 
 	output:
+	file out_target_decoy_db 
 
 	script:
+	out_target_decoy_db = "${experiment_name}_target_decoy.fasta"
+	cont_db = "${baseDir}/database/contaminants.fasta"
 	"""
-	Rscript ${baseDir}/bin/pga_generate_decoy.R ${out_dir}/ ${experiment_name} ${annovar_reference}/../
+	#!/usr/bin/env /usr/local/bin/Rscript
+	library(PGA)
+	buildTargetDecoyDB(db="${format_db}",
+		decoyPrefix="XXX_",
+		cont_file="${cont_db}",
+		output="${out_target_decoy_db}")
+
 	"""
 }
+
+
+
+
+
+
+
