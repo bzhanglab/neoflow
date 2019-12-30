@@ -8,7 +8,7 @@ import re
 import subprocess
 
 
-def do_annovar(vcf:str,v_type:str, out_dir:str,paramap:dict):
+def do_annovar(vcf:str, v_type:str, sample_name:str, out_dir:str, paramap:dict):
 
 	out_name = out_dir + "/" + os.path.basename(vcf)
 	vcf_format = False
@@ -23,14 +23,14 @@ def do_annovar(vcf:str,v_type:str, out_dir:str,paramap:dict):
 		" -polish "
 
 	if vcf.endswith(".vcf") or vcf.endswith(".VCF"):
-		out_name = re.sub(r".vcf$","",out_name)
-		out_name = re.sub(r".VCF$","",out_name)
-		out_name = out_name + "_" + str(v_type)
+		#out_name = re.sub(r".vcf$","",out_name)
+		#out_name = re.sub(r".VCF$","",out_name)
+		out_name = str(sample_name) + "_" + str(v_type)
 		vcf_format = True
 		cmd = cmd + " -out " + out_name + " -vcfinput "
 	else:
-		out_name = re.sub(r".txt$","",out_name)
-		out_name = out_name + "_" + str(v_type)
+		#out_name = re.sub(r".txt$","",out_name)
+		out_name = str(sample_name) + "_" + str(v_type)
 		vcf_format = False
 		cmd = cmd + " -out " + out_name
 
@@ -103,7 +103,7 @@ def main():
 		for k in range(len(files)):
 			vf = files[k]
 			vf_type = file_types[k]
-			res_file = do_annovar(vf,vf_type,out_dir,paramap)
+			res_file = do_annovar(vf,v_type=vf_type,sample_name=sample,out_dir=out_dir,paramap=paramap)
 			if sample in res:
 				res[sample][vf_type] = res_file
 			else:

@@ -34,7 +34,7 @@ git clone https://github.com/bzhanglab/neoflow
 
 4. Install **ANNOVAR** by following the instruction at [http://annovar.openbioinformatics.org/en/latest/](http://annovar.openbioinformatics.org/en/latest/).
 
-5. Install **netMHCpan 4.0** by following the instruction at [http://www.cbs.dtu.dk/services/doc/netMHCpan-4.0.readme](http://www.cbs.dtu.dk/services/doc/netMHCpan-4.0.readme). **netMHCpan 4.0** must be installed in the folder of NeoFlow.
+5. Install **netMHCpan 4.0** by following the instruction at [http://www.cbs.dtu.dk/services/doc/netMHCpan-4.0.readme](http://www.cbs.dtu.dk/services/doc/netMHCpan-4.0.readme).
 
 6. Install [nvidia-docker](https://github.com/NVIDIA/nvidia-docker) (>=2.2.2) for [**AutoRT**](https://github.com/bzhanglab/AutoRT/) by following the instruction at [https://github.com/NVIDIA/nvidia-docker](https://github.com/NVIDIA/nvidia-docker). This is optional and it is only required when users want to use the RT based validation for novel peptide identifications using AutoRT.
 
@@ -64,7 +64,7 @@ Arguments:
   --help                  Print help message
 ```
 
-The txt file for parameter `--vcf_file` contains the path of VCF file(s) and its format is shown below:
+The input file for parameter `--vcf_file` is a **tab-delimited text file** which contains the path of variant file(s). The variant file can be [**VCF format**](https://samtools.github.io/hts-specs/VCFv4.2.pdf) or [**simple text-based format**](http://annovar.openbioinformatics.org/en/latest/user-guide/input/) ([ANNOVAR input format](http://annovar.openbioinformatics.org/en/latest/user-guide/input/)). The input txt file for `--vcf_file` format is shown below:
 
 | experiment | sample | file | file_type |
 |---|---|---|---|

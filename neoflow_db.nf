@@ -111,6 +111,8 @@ annovar_operation = "g"
  */
 annovar_tool = file(params.annovar_dir + "/table_annovar.pl")
 if( !annovar_tool.exists() ) exit 1, "ANNOVAR perl is invalid: ${annovar_tool}"
+annovar_dir = file(params.annovar_dir)
+
 
 if( !mapping_vcf_file.exists() ) exit 1, "variant mapping file is invalid: ${mapping_vcf_file}"
 
@@ -164,7 +166,7 @@ process variant_annotation {
 
 	input:
 	file single_experiment_map_file from single_experiment_map_files.flatten()
-	file annovar_anno_dir
+	file annovar_dir
 
 	output:
 	set val(experiment_name),file("${ofile}") into anno_file
@@ -183,7 +185,7 @@ process variant_annotation {
 		-c ${cpus} \
 		-o ./ \
 		-f ${ofile} \
-		-a ${annovar_tool}
+		-a "${annovar_dir}/table_annovar.pl"
 	"""
 }
 

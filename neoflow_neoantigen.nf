@@ -49,7 +49,7 @@ hla_type_file = file(params.hla_type)
 var_db = file(params.var_db)
 var_info_file = file(params.var_info_file)
 out_dir = file(params.out_dir)
-netmhcpan_dir = params.netmhcpan_dir
+netmhcpan_dir = file(params.netmhcpan_dir)
 cpu = params.cpu
 ref_db = file(params.ref_db)
 var_pep_file = file(params.var_pep_file)
@@ -132,6 +132,7 @@ process mhc_peptide_binding_prediction {
     file hla_type_file
     file var_db
     file var_info_file_list
+    file netmhcpan_dir
 
     output:
     file("${var_info_file_list}_binding_prediction_result.csv") into mhc_binding_prediction_i
@@ -145,7 +146,7 @@ process mhc_peptide_binding_prediction {
       -var_db ${var_db} \
       -var_info ${var_info_file_list} \
       -o ./ \
-      -netmhcpan ${netmhcpan_tool} \
+      -netmhcpan "${netmhcpan_dir}/netMHCpan" \
       -cpu 1
     """
 
