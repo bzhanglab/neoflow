@@ -6,16 +6,16 @@
 
 NeoFlow includes four modules:
 
-1. Variant annotation and customized database construction: neoflow_db.nf;
-2. Variant peptide identification: neoflow_msms.nf;
+1. Variant annotation and customized database construction: `neoflow_db.nf`;
+2. Variant peptide identification: `neoflow_msms.nf`;
 
    * MS/MS searching. Three search engines are available: [MS-GF+](https://github.com/MSGFPlus/msgfplus), [X!Tandem](https://www.thegpm.org/tandem/) and [Comet](http://comet-ms.sourceforge.net/);
    * FDR estimation: global FDR estimation;
    * Novel peptide validation by [PepQuery](http://pepquery.org/);
    * RT based validation for novel peptide identifications using [AutoRT](https://github.com/bzhanglab/AutoRT): optional (GPU required).
 
-3. HLA typing: neoflow_hlatyping.nf;
-4. Neoantigen prediction: neoflow_neoantigen.nf
+3. HLA typing: `neoflow_hlatyping.nf`;
+4. Neoantigen prediction: `neoflow_neoantigen.nf`.
 
 
 NeoFlow supports both label free and iTRAQ/TMT data.
