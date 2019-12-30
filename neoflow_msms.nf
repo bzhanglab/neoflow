@@ -129,7 +129,6 @@ process msms_searching{
             -conf ${msms_para_file} \
             -tda 0 \
             -o ${ms_file.baseName}.mzid
-        done
         """
     }else if(search_engine == "comet") {
         res_file = "${ms_file.baseName}_rawResults.txt"
