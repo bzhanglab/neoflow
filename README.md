@@ -64,7 +64,7 @@ Arguments:
   --help                  Print help message
 ```
 
-The input file for parameter `--vcf_file` is a **tab-delimited text file** which contains the path of variant file(s). The variant file can be [**VCF format**](https://samtools.github.io/hts-specs/VCFv4.2.pdf) or [**simple text-based format**](http://annovar.openbioinformatics.org/en/latest/user-guide/input/) ([ANNOVAR input format](http://annovar.openbioinformatics.org/en/latest/user-guide/input/)). The input txt file for `--vcf_file` format is shown below:
+The input file for parameter `--vcf_file` is a **tab-delimited text file** which contains the path of variant file(s). The variant file can be [**VCF format**](https://samtools.github.io/hts-specs/VCFv4.2.pdf) or [**simple text-based format**](http://annovar.openbioinformatics.org/en/latest/user-guide/input/) ([ANNOVAR input format](http://annovar.openbioinformatics.org/en/latest/user-guide/input/)). The input txt file (**a tab-delimited text file**) for `--vcf_file` format is shown below:
 
 | experiment | sample | file | file_type |
 |---|---|---|---|
