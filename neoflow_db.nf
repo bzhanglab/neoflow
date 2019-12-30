@@ -194,7 +194,7 @@ process database_construction {
 
 	container "bzhanglab/neoflow:1.0"
 
-	publishDir "${out_dir}/customized_database/", mode: "copy", overwrite: true
+	publishDir "${out_dir}/customized_database/", mode: "copy", overwrite: true, pattern: '*{.fasta,-varInfo.txt}'
 
 	input:
 	set val(experiment_name), file(anno_f) from anno_file
@@ -202,11 +202,11 @@ process database_construction {
 	file v_multianno_file
 
 	output:
-	file("*.fasta") into final_db
+	file("*-var.fasta")
 	set val(experiment_name), file("${experiment_name}_anno-var.fasta") into target_customized_db_fa
-	set val(experiment_name), file("${experiment_name}_anno-varInfo.txt") into target_customized_db_info
-	file("ref.fasta") into refdb
-	file("*-varInfo.txt") into info
+	//set val(experiment_name), file("${experiment_name}_anno-varInfo.txt") into target_customized_db_info
+	file("ref.fasta")
+	file("*-varInfo.txt")
 	//file("${experiment_name}_anno-var_format.fasta") into target_customized_db_format_fa
 
 	script:
