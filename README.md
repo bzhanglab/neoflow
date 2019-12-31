@@ -167,7 +167,7 @@ neoflow => HLA typing
 Usage:
 nextflow run neoflow_hlatyping.nf
 Arguments:
-  --reads                     Reads data in fastq.gz format. For example, "*_{1,2}.fq.gz"
+  --reads                     Reads data in fastq.gz or fastq format. For example, "*_{1,2}.fq.gz"
   --hla_ref_dir               HLA reference folder
   --seqtype                   Read type, dna or rna. Default is dna.
   --singleEnd                 Single end or not, default is false (pair end reads)

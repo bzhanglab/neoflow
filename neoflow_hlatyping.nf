@@ -20,7 +20,7 @@ def helpMessage() {
     Usage:
     nextflow run neoflow_hlatyping.nf
     Arguments:
-      --reads                     Reads data in fastq.gz format. For example, "*_{1,2}.fq.gz"
+      --reads                     Reads data in fastq.gz or fastq format. For example, "*_{1,2}.fq.gz"
       --hla_ref_dir               HLA reference folder
       --seqtype                   Read type, dna or rna. Default is dna.
       --singleEnd                 Single end or not, default is false (pair end reads)
@@ -54,29 +54,6 @@ Channel.fromFilePairs( params.reads, size: params.singleEnd ? 1 : 2 )
     .set { input_data }
 
 
-process unzip {
-
-	echo true
-	
-	input:
-    set val(pattern), file(reads) from input_data
-
-    output:
-    set val(pattern), "unzipped_{1,2}.fastq" into raw_reads
-
-    script:
-    if(params.singleEnd == true)
-    """
-    zcat ${reads[0]} > unzipped_1.fastq
-    """
-    else
-    """
-    zcat ${reads[0]} > unzipped_1.fastq
-    zcat ${reads[1]} > unzipped_2.fastq
-    """
-}
-
-
 process reads_mapping {
 
 	echo true
@@ -87,7 +64,7 @@ process reads_mapping {
 
 	input:
 	file hla_reference_dir
-	set val(pattern), file(reads) from raw_reads
+	set val(pattern), file(reads) from input_data
 
 	output:
 	set val(pattern), "mapped_{1,2}.sam" into mapped_reads
