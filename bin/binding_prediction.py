@@ -25,8 +25,6 @@ parser.add_argument("-o",
                     help="Output folder")
 parser.add_argument("-netmhcpan",
                     help="NetMHCpan path")
-parser.add_argument("-cpu", type=int,
-                    help="The number of CPUs used")
 
 args = parser.parse_args()
 
@@ -36,7 +34,6 @@ AA_form_file = args.var_info
 protein_file = args.var_db
 save_path = args.o
 netMHCpan = args.netmhcpan
-n = args.cpu
 
 if save_path[-1] != '/':
     save_path = save_path + '/'
@@ -231,7 +228,7 @@ SeqIO.write(records, fasta_file, "fasta")
 
 # netMHCpan for neoantigen binding affinity prediction
 
-def typing(line):
+def typing(line,netMHCpan,out_dir):
     HLA_type_long = str(line[0]) + str(line[1]) + ':' + str(line[2])
     HLA_type_short = str(line[0]) + str(line[1]) + str(line[2])
     
@@ -239,7 +236,7 @@ def typing(line):
     a1 = '-f ' + fasta_file
     a2 = '-a ' + HLA_type_long
     a3 = '-l 8,9,10,11'
-    a4 = '>' + save_path + 'tmp/' + HLA_type_short + "_netMHCpan.csv"
+    a4 = '>' + out_dir + 'tmp/' + HLA_type_short + "_netMHCpan.csv"
     netMHCpan_argument.extend((netMHCpan, a1, a2, a3, '-BA', a4))
     cmd = ' '.join(netMHCpan_argument)
     try:
@@ -250,9 +247,11 @@ def typing(line):
     #os.system(' '.join(netMHCpan_argument))
 
 
-pool = Pool(n)
-pool.map(typing, HLA_types)
-pool.close()
+#pool = Pool(n)
+#pool.map(typing, HLA_types)
+#pool.close()
+for hla in HLA_types:
+    typing(hla,netMHCpan,save_path)
 
 # combine netMHCpan result
 typing_files = []

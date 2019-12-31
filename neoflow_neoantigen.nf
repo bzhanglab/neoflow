@@ -147,7 +147,6 @@ process mhc_peptide_binding_prediction {
       -var_info ${var_info_file_list} \
       -o ./ \
       -netmhcpan "${netmhcpan_dir}/netMHCpan" \
-      -cpu 1
     """
 
 }

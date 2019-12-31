@@ -34,7 +34,15 @@ git clone https://github.com/bzhanglab/neoflow
 
 4. Install **ANNOVAR** by following the instruction at [http://annovar.openbioinformatics.org/en/latest/](http://annovar.openbioinformatics.org/en/latest/).
 
-5. Install **netMHCpan 4.0** by following the instruction at [http://www.cbs.dtu.dk/services/doc/netMHCpan-4.0.readme](http://www.cbs.dtu.dk/services/doc/netMHCpan-4.0.readme).
+5. Install **netMHCpan 4.0** by following the instruction at [http://www.cbs.dtu.dk/services/doc/netMHCpan-4.0.readme](http://www.cbs.dtu.dk/services/doc/netMHCpan-4.0.readme). Please set **`TMPDIR`** in file `netMHCpan-4.0/netMHCpan` as `/tmp` as shown below:
+
+```sh
+# determine where to store temporary files (must be writable to all users)
+
+if ( ${?TMPDIR} == 0 ) then
+        setenv  TMPDIR  /tmp
+endif
+```
 
 6. Install [nvidia-docker](https://github.com/NVIDIA/nvidia-docker) (>=2.2.2) for [**AutoRT**](https://github.com/bzhanglab/AutoRT/) by following the instruction at [https://github.com/NVIDIA/nvidia-docker](https://github.com/NVIDIA/nvidia-docker). This is optional and it is only required when users want to use the RT based validation for novel peptide identifications using AutoRT.
 
