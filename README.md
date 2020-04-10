@@ -250,3 +250,8 @@ The running time of above example is less than 30 minutes on a Linux server with
 ##  Example data
 
 The test data used for above examples can be downloaded by clicking [test data ](http://pdv.zhang-lab.org/data/download/neoflow_example_data/example_data.tar.gz). 
+
+
+## How to cite:
+
+Wen, B., Li, K., Zhang, Y. et al. Cancer neoantigen prioritization through sensitive and reliable proteogenomics analysis. Nature Communications 11, 1759 (2020). https://doi.org/10.1038/s41467-020-15456-w
