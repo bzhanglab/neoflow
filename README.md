@@ -1,8 +1,8 @@
-# NeoFlow
+# [NeoFlow](https://doi.org/10.1038/s41467-020-15456-w)
 
 ## Overview
 
-**NeoFlow: a proteogenomics pipeline for neoantigen discovery**
+**[NeoFlow](https://doi.org/10.1038/s41467-020-15456-w): a proteogenomics pipeline for neoantigen discovery**
 
 NeoFlow includes four modules:
 
