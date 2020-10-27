@@ -103,7 +103,7 @@ process run_samtools{
 	samtools view -bS mapped_1.sam > mapped_1.bam
 	samtools view -bS mapped_2.sam > mapped_2.bam
 
-	samtools fastq mapped_2.bam > mapped_2.fastq
+	samtools fastq mapped_1.bam > mapped_1.fastq
 	samtools fastq mapped_2.bam > mapped_2.fastq
 	"""
 
