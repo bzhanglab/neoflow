@@ -66,7 +66,7 @@ RUN wget -O /opt/customprodbj.jar https://github.com/wenbostar/Customprodbj/rele
 
 RUN wget -O /opt/pepmap.jar https://github.com/wenbostar/pepmap/releases/download/v1.0.0/pepmap.jar
 
-RUN git clone https://github.com/bzhanglab/neoflow/ /opt/
+RUN git clone https://github.com/bzhanglab/neoflow/ /opt/neoflow/
 
 
 
