@@ -1,5 +1,5 @@
 #specifying the base image
-FROM ubuntu:19.04
+FROM ubuntu:19.10
 
 MAINTAINER Kai Li <kail@bcm.edu>
 
