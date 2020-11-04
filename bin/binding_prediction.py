@@ -8,7 +8,7 @@ import sys
 import numpy as np
 import pandas as pd
 from Bio import SeqIO
-from Bio.Alphabet import IUPAC
+#from Bio.Alphabet import IUPAC
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
@@ -221,7 +221,8 @@ with open(AA_form_file) as csvfile2:
 records = []
 for seq in set(long_AA_sequence_list):
     if seq != '':
-        records.append(SeqRecord(Seq(seq, IUPAC.protein)))
+        #records.append(SeqRecord(Seq(seq, IUPAC.protein)))
+        records.append(SeqRecord(Seq(seq)))
 fasta_file = save_path + 'tmp/neoantigen_candidates.fasta'
 SeqIO.write(records, fasta_file, "fasta")
 
