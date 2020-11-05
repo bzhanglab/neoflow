@@ -285,7 +285,11 @@ if(var_pep_file.exists() && var_pep_info.exists()){
         library(tidyr)
 
         a <- read.csv("${mhc_binding_prediction_filtered_file}",stringsAsFactors=FALSE) %>%
-          mutate(Chr = as.character(Chr))
+          mutate(Chr = as.character(Chr), 
+                 Start = as.character(Start), 
+                 End = as.character(End), 
+                 Ref = as.character(Ref),
+                 Alt = as.character(Alt))
 
         var_pep_psms <- read.delim("${var_pep_file}",stringsAsFactors=FALSE)
         var_pep_info <- read.delim("${var_pep_info}",stringsAsFactors=FALSE) %>%
@@ -296,9 +300,12 @@ if(var_pep_file.exists() && var_pep_info.exists()){
           separate_rows(protein,sep=";")
 
         var_pep_pro_info <- merge(var_pep_pro,var_pep_info,by.x="protein",by.y="Variant_ID") %>%
-          select(peptide,Chr,Start,End,Ref,Alt)
-
-
+          select(peptide,Chr,Start,End,Ref,Alt) %>%
+          mutate(Chr = as.character(Chr), 
+                 Start = as.character(Start), 
+                 End = as.character(End), 
+                 Ref = as.character(Ref),
+                 Alt = as.character(Alt))
 
         a_var <- left_join(a,var_pep_pro_info,by=c("Chr","Start","End","Ref", "Alt")) %>%
           mutate(protein_var_evidence_pep=ifelse(is.na(peptide),"-",peptide)) %>%
