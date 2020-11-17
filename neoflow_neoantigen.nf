@@ -170,7 +170,7 @@ process combine_prediction_results {
     library(dplyr)
     library(readr)
     fs <- list.files(path="./",pattern="*_binding_prediction_result.csv")
-    a <- lapply(fs,read.csv,stringsAsFactors=FALSE) %>% bind_rows()
+    a <- lapply(fs,read.csv,stringsAsFactors=FALSE, colClasses=c("Ref"="character", "Alt"="character")) %>% bind_rows()
     ofile <- paste("${output_prefix}","_binding_prediction_result.csv",sep="")
     write_csv(a, ofile)
     """
