@@ -102,7 +102,8 @@ process split_file {
         use_ncpu <- 1
     }
 
-    nlines_per_file <- ceiling(nrow(a)/use_ncpu)
+    #nlines_per_file <- ceiling(nrow(a)/use_ncpu)
+    nlines_per_file <- nrow(a) %/% use_ncpu
     last_i <- 0
     for(i in 1:use_ncpu){
         i1 <- last_i + 1
