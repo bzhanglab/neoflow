@@ -281,15 +281,16 @@ for raw_path in typing_files:
                         writer.writerow(seq)
 
 # Make Master Matrix
-binding_result = pd.read_csv(save_name,
+if (len(records) != 0):
+    binding_result = pd.read_csv(save_name,
                              header=None,
                              names=['HLA_type',
                                     'Neoepitope',
                                     'netMHCpan_binding_affinity_nM',
                                     'netMHCpan_precentail_rank'], low_memory=False)
-somatic_mutation = pd.read_csv(save_path + 'tmp/somatic_mutation_reference.csv', low_memory=False)
-master_matrix = pd.merge(somatic_mutation, binding_result, on='Neoepitope')
-master_matrix.to_csv(save_path + sample_id + '_binding_prediction_result.csv', index=False)
+    somatic_mutation = pd.read_csv(save_path + 'tmp/somatic_mutation_reference.csv', low_memory=False)
+    master_matrix = pd.merge(somatic_mutation, binding_result, on='Neoepitope')
+    master_matrix.to_csv(save_path + sample_id + '_binding_prediction_result.csv', index=False)
 
 # clean up
 os.system('rm -r ' + save_path + 'tmp/')
