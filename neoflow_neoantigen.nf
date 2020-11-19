@@ -87,7 +87,7 @@ process split_file {
     library(parallel)
 
     ncpu <- detectCores()
-    use_ncpu <- 0
+    use_ncpu <- 1
     user_ncpu <- as.numeric("${cpu}")
     if(user_ncpu <= ncpu){
       use_ncpu <- user_ncpu
