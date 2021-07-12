@@ -104,7 +104,7 @@ process msms_searching{
 
     tag "${ms_file}"
 
-    container "bzhanglab/neoflow:1.0"
+    container "proteomics/neoflow:latest"
 
     publishDir "${out_dir}/msms_searching/", mode: "copy", overwrite: true
 
@@ -243,7 +243,7 @@ process run_pepquery{
 
     tag "run_pepquery"
 
-    container "bzhanglab/neoflow:1.0"
+    container "proteomics/neoflow:latest"
 
     publishDir "${out_dir}/pepquery/", mode: "copy", overwrite: true
 
