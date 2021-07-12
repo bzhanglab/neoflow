@@ -261,7 +261,7 @@ process run_pepquery{
         """
         #!/bin/sh
         cat 
-        java -Xmx10g -jar /opt/PepQuery_v1.3.0/pepquery-1.3.jar \
+        java -Xmx10g -jar /opt/pepquery-1.6.2/pepquery-1.6.2.jar \
               -ms ${ms_data} \
               -pep ${novel_peptide_tsv} \
               -db ${pv_refdb} \
@@ -283,7 +283,7 @@ process run_pepquery{
         """
         #!/bin/sh
         cat ${ms_data}/*.mgf > all_msms.mgf 
-        java -Xmx10g -jar /opt/PepQuery_v1.3.0/pepquery-1.3.jar \
+        java -Xmx10g -jar /opt/pepquery-1.6.2/pepquery-1.6.2.jar \
               -ms all_msms.mgf \
               -pep ${novel_peptide_tsv} \
               -db ${pv_refdb} \
