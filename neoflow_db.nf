@@ -160,7 +160,7 @@ process pre_processing {
 process variant_annotation {
 	tag "${single_experiment_map_file}"
 
-	container "bzhanglab/neoflow:1.0"
+	container "proteomics/neoflow:latest"
 
 	publishDir "${out_dir}/variant_annotation/", mode: "copy", overwrite: true
 
@@ -192,7 +192,7 @@ process variant_annotation {
 process database_construction {
 	tag "$experiment_name"
 
-	container "bzhanglab/neoflow:1.0"
+	container "proteomics/neoflow:latest"
 
 	publishDir "${out_dir}/customized_database/", mode: "copy", overwrite: true, pattern: '*{.fasta,-varInfo.txt}'
 
@@ -228,7 +228,7 @@ process database_construction {
 process format_db {
 	tag "$experiment_name"
 
-	container "bzhanglab/neoflow:1.0"
+	container "proteomics/neoflow:latest"
 
 	publishDir "${out_dir}/customized_database/", mode: "copy", overwrite: true
 
