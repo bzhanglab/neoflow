@@ -1,15 +1,7 @@
 #specifying the base image
-FROM ubuntu:19.10
-
-MAINTAINER Kai Li <kail@bcm.edu>
-
-#USER root
-
-ARG PYTHON=python3
-ARG PIP=pip3
-
-# See http://bugs.python.org/issue19846
-ENV LANG C.UTF-8
+FROM ubuntu:18.04
+LABEL maintainer="bo.wen@bcm.edu"
+LABEL version="1.1.0"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
@@ -19,19 +11,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     unzip \
     pkg-config \
     curl \
-    ${PYTHON} \
-    ${PYTHON}-pip && \
+    python3 \
+    python3-pip && \
     apt-get -y  install --fix-missing openjdk-8-jre && \
     apt-get clean
 
-RUN ${PIP} --no-cache-dir install --upgrade \
+RUN pip3 --no-cache-dir install --upgrade \
     pip \
     setuptools
 
 # Some TF tools expect a "python" binary
-RUN ln -s $(which ${PYTHON}) /usr/local/bin/python
+RUN ln -s $(which python3) /usr/local/bin/python
 
-RUN ${PIP} install numpy pandas biopython
+RUN pip3 install numpy pandas biopython
 
 #install MSGFPlus
 RUN wget https://github.com/MSGFPlus/msgfplus/releases/download/v2019.07.03/MSGFPlus_v20190703.zip \
@@ -56,11 +48,11 @@ RUN wget http://www.proteoannotator.org/datasets/releases/ProteoAnnotator-1.7.86
 	&& unzip ProteoAnnotator-1.7.86.zip \
 	&& rm ProteoAnnotator-1.7.86.zip \
 	&& mv ProteoAnnotator-1.7.86/mzidlib-1.7 /opt/mzidlib-1.7/
-#install pepquery-1.3
-RUN wget http://www.pepquery.org/data/PepQuery_v1.3.0.tar.gz \
-	&& tar -xzvf PepQuery_v1.3.0.tar.gz \
-	&& rm PepQuery_v1.3.0.tar.gz \
-	&& mv PepQuery_v1.3.0 /opt/PepQuery_v1.3.0/
+#install pepquery-1.6.2
+RUN wget http://pepquery.org/data/pepquery-1.6.2.tar.gz \
+	&& tar -xzvf pepquery-1.6.2.tar.gz \
+	&& rm pepquery-1.6.2.tar.gz \
+	&& mv pepquery-1.6.2 /opt/pepquery-1.6.2/
 
 RUN wget -O /opt/customprodbj.jar https://github.com/wenbostar/Customprodbj/releases/download/v1.1.0/customprodbj.jar
 
