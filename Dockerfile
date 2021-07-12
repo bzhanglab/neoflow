@@ -54,7 +54,7 @@ RUN wget http://pepquery.org/data/pepquery-1.6.2.tar.gz \
 	&& rm pepquery-1.6.2.tar.gz \
 	&& mv pepquery-1.6.2 /opt/pepquery-1.6.2/
 
-RUN wget -O /opt/customprodbj.jar https://github.com/wenbostar/Customprodbj/releases/download/v1.1.0/customprodbj.jar
+RUN wget -O /opt/customprodbj.jar https://github.com/wenbostar/Customprodbj/releases/download/v1.2.0/customprodbj.jar
 
 RUN wget -O /opt/pepmap.jar https://github.com/wenbostar/pepmap/releases/download/v1.0.0/pepmap.jar
 
