@@ -71,7 +71,7 @@ def helpMessage() {
       --ref_ver               The genome version, hg19 or hg38, default is "hg19"
       --out_dir               Output folder, default is "./output"
       --cpu                   The number of CPUs
-	  --help                  Print help message
+      --help                  Print help message
 
     """.stripIndent()
 }
