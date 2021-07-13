@@ -127,7 +127,7 @@ process mhc_peptide_binding_prediction {
     //publishDir "${out_dir}", mode: "copy", overwrite: true
     //maxForks $cpu
 
-    container "bzhanglab/neoflow:1.0"
+    container "proteomics/neoflow:latest"
     
     input:
     file hla_type_file
@@ -215,7 +215,7 @@ process prepare_data_for_mapping {
 process peptide_mapping {
     tag "peptide_mapping"  
 
-    container "bzhanglab/neoflow:1.0"
+    container "proteomics/neoflow:latest"
 
     input:
     file all_neoepitope_file
