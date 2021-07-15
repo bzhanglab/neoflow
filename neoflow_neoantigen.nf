@@ -126,6 +126,7 @@ process mhc_peptide_binding_prediction {
 
     //publishDir "${out_dir}", mode: "copy", overwrite: true
     //maxForks $cpu
+    cpus 1
 
     container "proteomics/neoflow:latest"
     
