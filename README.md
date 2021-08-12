@@ -228,7 +228,7 @@ VAR\|NM\_001348265\|10055|chrX|48418659|48418659|G|A|nonsynonymous SNV|protein-a
 VAR\|NM\_001348265\|10055|chrX|48418659|48418659|G|A|nonsynonymous SNV|protein-altering|TBC1D25|NM\_001348265|TGFGGHRG|1|1|A|T|HLA-C*07:01|43330|73.7774|-
 
 
-Columns	Description:
+Column description for the above table:
 ```
 Variant_ID:	variant ID defined by neoflow
 Chr:	variant chromosome
