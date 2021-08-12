@@ -246,8 +246,8 @@ Variant_End:	variant end position on neoepitope peptide
 AA_before:	reference amino acid
 AA_after:	alterative amino acid
 HLA_type:	HLA type
-netMHCpan_binding_affinity_nM:	MHC-peptide binding affinity. The lower the value, the higher the binding affinity between MHC and neoepitope peptide.
-netMHCpan_precentail_rank:	MHC-peptide binding affinity rank
+netMHCpan_binding_affinity_nM:	MHC-peptide binding affinity from NetMHCpan 4.0. The lower the value, the higher the binding affinity between MHC and neoepitope peptide.
+netMHCpan_precentail_rank:	MHC-peptide binding affinity rank from NetMHCpan 4.0
 protein_var_evidence_pep:	variant peptide. "-" means no variant peptide identified covers the mutation site.
 ```
 
