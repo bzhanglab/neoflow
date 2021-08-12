@@ -227,6 +227,30 @@ VAR\|NM\_002536\|10054|chrX|48418659|48418659|G|A|nonsynonymous SNV|protein-alte
 VAR\|NM\_001348265\|10055|chrX|48418659|48418659|G|A|nonsynonymous SNV|protein-altering|TBC1D25|NM\_001348265|TGFGGHRG|1|1|A|T|HLA-A*01:01|44216.6|88.5537|-
 VAR\|NM\_001348265\|10055|chrX|48418659|48418659|G|A|nonsynonymous SNV|protein-altering|TBC1D25|NM\_001348265|TGFGGHRG|1|1|A|T|HLA-C*07:01|43330|73.7774|-
 
+
+Columns	Description:
+```
+Variant_ID:	variant ID defined by neoflow
+Chr:	variant chromosome
+Start:	start position on genome
+End:	end position on genome
+Ref:	reference base
+Alt:	alterative base
+Variant_Type:	variant type annotated by ANNOVAR
+Variant_Function:	variant function annotated by ANNOVAR
+Gene:	gene ID
+mRNA:	mRNA ID
+Neoepitope:	neoepitope peptide
+Variant_Start:	variant start position on neoepitope peptide
+Variant_End:	variant end position on neoepitope peptide
+AA_before:	reference amino acid
+AA_after:	alterative amino acid
+HLA_type:	HLA type
+netMHCpan_binding_affinity_nM:	MHC-peptide binding affinity. The lower the value, the higher the binding affinity between MHC and neoepitope peptide.
+netMHCpan_precentail_rank:	MHC-peptide binding affinity rank
+protein_var_evidence_pep:	variant peptide. "-" means no variant peptide identified covers the mutation site.
+```
+
 #### Example
 ```sh
 nextflow run neoflow_neoantigen.nf --prefix sample1 \
