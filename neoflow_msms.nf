@@ -105,6 +105,8 @@ process msms_searching{
     tag "${ms_file}"
 
     container "proteomics/neoflow:latest"
+    
+    cpus "$params.cpu"
 
     publishDir "${out_dir}/msms_searching/", mode: "copy", overwrite: true
 
@@ -172,6 +174,8 @@ process calculate_fdr{
     tag "calculate_fdr"
 
     container "proteomics/pga:latest"
+    
+    cpus "$params.cpu"
 
     publishDir "${out_dir}/fdr_estimation/", mode: "copy", overwrite: true
 
@@ -200,6 +204,8 @@ process prepare_pepquery_input{
     tag "prepare_pepquery_input"
 
     container "proteomics/pga:latest"
+    
+    cpus "$params.cpu"
 
     input:
     file(pga_result_folder)
@@ -244,6 +250,8 @@ process run_pepquery{
     tag "run_pepquery"
 
     container "proteomics/neoflow:latest"
+    
+    cpus "$params.cpu"
 
     publishDir "${out_dir}/pepquery/", mode: "copy", overwrite: true
 
@@ -310,6 +318,8 @@ process add_pepquery_validation {
     tag "add_pepquery_validation"
 
     container "proteomics/pga:latest"
+    
+    cpus "$params.cpu"
 
     publishDir "${out_dir}/novel_peptide_identification/", mode: "copy", overwrite: true
 
@@ -354,6 +364,8 @@ if (params.rt_validation) {
         tag "prepare_autort_data"
 
         container "proteomics/pga:latest"
+	
+	cpus "$params.cpu"
 
         input:
         file pga_re_dir from pga_result_folder_for_autort
@@ -381,6 +393,8 @@ if (params.rt_validation) {
         tag "run_autort"
 
         container "proteomics/autort:latest"
+	
+	cpus "$params.cpu"
 
         publishDir "${out_dir}/rt_validation/", mode: "copy", overwrite: true
 
