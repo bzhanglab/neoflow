@@ -61,6 +61,8 @@ process reads_mapping {
 	tag "reads_mapping"
 
 	container "biocontainers/bwa:0.7.15"
+	
+	cpus "$params.cpu"
 
 	input:
 	file hla_reference_dir
@@ -84,6 +86,8 @@ process reads_mapping {
 process run_samtools{
 
 	container "zhanglab18/samtools:1.9"
+	
+	cpus "$params.cpu"
 
 	input:
 	file hla_reference_dir
@@ -114,6 +118,8 @@ process run_optitype {
 	tag "run_optitype"
 
 	container "zhanglab18/optitype:1.3.1"
+	
+	cpus "$params.cpu"
 
 	publishDir "${out_dir}/hla_type/", mode: "copy", overwrite: true
 
