@@ -99,13 +99,17 @@ process run_samtools{
 	script:
 	if(params.singleEnd == true)
 	"""
-	samtools view -bS mapped_1.sam > mapped_1.bam
+	# samtools view -bS mapped_1.sam > mapped_1.bam
+	samtools view -@ ${params.cpu} -h -F 4 -b1 mapped_1.sam > mapped_1.bam
 	samtools fastq mapped_1.bam > mapped_1.fastq
 	"""
 	else
 	"""
-	samtools view -bS mapped_1.sam > mapped_1.bam
-	samtools view -bS mapped_2.sam > mapped_2.bam
+	# samtools view -bS mapped_1.sam > mapped_1.bam
+	# samtools view -bS mapped_2.sam > mapped_2.bam
+	
+	samtools view -@ ${params.cpu} -h -F 4 -b1 mapped_1.sam > mapped_1.bam
+        samtools view -@ ${params.cpu} -h -F 4 -b1 mapped_2.sam > mapped_2.bam
 
 	samtools fastq mapped_1.bam > mapped_1.fastq
 	samtools fastq mapped_2.bam > mapped_2.fastq
