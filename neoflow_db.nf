@@ -127,7 +127,7 @@ mapping_f = file(new_mapping_file)
 process pre_processing {
 	tag "${mapping_file}"
 
-	echo true
+	debug true
 
 	container "proteomics/pga:latest"
 
