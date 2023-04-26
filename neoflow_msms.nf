@@ -136,7 +136,7 @@ process msms_searching{
         res_file = "${ms_file.baseName}_rawResults.txt"
         """
         #!/bin/sh
-        /opt/comet.2018014.linux.exe -P${msms_para_file} -N${ms_file.baseName}_rawResults -D${search_db} ${ms_file}
+        /opt/comet.2018014.linux.exe -P ${msms_para_file} -N ${ms_file.baseName}_rawResults -D ${search_db} ${ms_file}
         sed -i '1d' ${ms_file.baseName}_rawResults.txt
         sed -i '1 s/\$/\tna/' ${ms_file.baseName}_rawResults.txt
         """
