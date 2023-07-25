@@ -164,8 +164,11 @@ with open(AA_form_file) as csvfile2:
                 elif Variant_Type == "stopgain":
                     continue
                 else:
-                    start_position = int(AA_Pos)
-                    end_position = int(AA_Pos)
+                    if "-" in AA_Pos:
+                        continue
+                    else:
+                        start_position = int(AA_Pos)
+                        end_position = int(AA_Pos)
 
                 line = np.hstack((np.array(Variant_info).reshape(1, 10),
                                   np.array(AA_Ref).reshape(1, 1),
