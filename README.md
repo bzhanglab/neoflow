@@ -96,7 +96,7 @@ nextflow run neoflow_db.nf --ref_dir /data/tools/annovar/humandb_hg19/ \
                            --ref_ver hg19 \
                            --out_dir output
 ```
-Please update  inputs for parameters `--ref_dir`  and `--annovar_dir` before run the above example. The input file for `--vcf_file` can be downloaded from the [example data](http://pdv.zhang-lab.org/data/download/neoflow_example_data/example_data.tar.gz) prepared for testing. After the example data is downloaded to users' computer, unzip the data and all the testing data are available in the **example_data** folder.
+Please update  inputs for parameters `--ref_dir`  and `--annovar_dir` before run the above example. The input file for `--vcf_file` can be downloaded from the [example data](http://pdv.zhang-lab.org/data/download/neoflow_example_data/example_data.tar.gz) (Right click and Select **"Save link as…"**) prepared for testing. After the example data is downloaded to users' computer, unzip the data and all the testing data are available in the **example_data** folder.
 
 The running time of above example is less than 5 minutes on a Linux server with 40 cores.
 
@@ -150,7 +150,7 @@ nextflow run neoflow_msms.nf --ms example_data/mgf/ \
                --pv_itol 0.05
 ```
 
-The input files for `--ms` and `--msms_para_file` can be downloaded from the [example data](http://pdv.zhang-lab.org/data/download/neoflow_example_data/example_data.tar.gz) prepared for testing. 
+The input files for `--ms` and `--msms_para_file` can be downloaded from the [example data](http://pdv.zhang-lab.org/data/download/neoflow_example_data/example_data.tar.gz) (Right click and Select **"Save link as…"**) prepared for testing. 
 
 The variant peptide identification result is in this file `output/novel_peptide_identification/novel_peptides_psm_pepquery.tsv`.
 
@@ -185,7 +185,7 @@ nextflow run neoflow_hlatyping.nf --hla_ref_dir example_data/hla_reference \
                   --cpu 40
 ```
 
-The input files for `--hla_ref_dir` and `--reads` can be downloaded from the [example data](http://pdv.zhang-lab.org/data/download/neoflow_example_data/example_data.tar.gz) prepared for testing. 
+The input files for `--hla_ref_dir` and `--reads` can be downloaded from the [example data](http://pdv.zhang-lab.org/data/download/neoflow_example_data/example_data.tar.gz) (Right click and Select **"Save link as…"**) prepared for testing. 
 
 The HLA typing result is in this file `output/hla_type/sample1/sample1_result.tsv`.
 
@@ -273,7 +273,7 @@ The running time of above example is less than 30 minutes on a Linux server with
 
 ##  Example data
 
-The test data used for above examples can be downloaded by clicking [test data ](http://pdv.zhang-lab.org/data/download/neoflow_example_data/example_data.tar.gz). 
+The test data used for above examples can be downloaded by clicking [test data ](http://pdv.zhang-lab.org/data/download/neoflow_example_data/example_data.tar.gz) (Right click and Select **"Save link as…"**). 
 
 
 ## How to cite:
